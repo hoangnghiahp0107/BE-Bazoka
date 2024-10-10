@@ -6,7 +6,7 @@ import bookingRoutes from './bookingRoutes.js';
 import discountRoutes from './discountRoutes.js';
 import localRoutes from './localRoutes.js';
 import rateRoutes from './rateRoutes.js';
-
+import reviewRoutes from './reviewRoutes.js';
 const rootRouter = express.Router();
 
 rootRouter.use("/user", [userRoutes]);
@@ -16,5 +16,6 @@ rootRouter.use("/booking", [bookingRoutes]);
 rootRouter.use("/discount", [discountRoutes]);
 rootRouter.use("/local", [localRoutes]);
 rootRouter.use("/rate", [rateRoutes])
+rootRouter.use("/reviews", [reviewRoutes]); // Kết nối các routes cho reviews
 
 export default rootRouter;
