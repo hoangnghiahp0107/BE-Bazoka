@@ -22,6 +22,7 @@ const createReview = async (req, res) => {
             return res.status(401).send("Người dùng không được xác thực");
         }
 
+<<<<<<< HEAD
         // Giải mã token để lấy thông tin người dùng
         const decodedToken = jwt.verify(token, 'MINHNGHIA');
         const userId = decodedToken.data.MA_ND; // Giả sử bạn lưu MA_ND trong token
@@ -45,11 +46,30 @@ const createReview = async (req, res) => {
         res.status(201).send("Bạn đã tạo đánh giá thành công");
     } catch (error) {
         console.error("Lỗi khi thêm đánh giá:", error);
+=======
+        let { SO_SAO, BINH_LUAN, NGAY_DG, MA_KS, MA_ND } = req.body;
+
+        let sao =5;
+        let reviewData = {
+            sao,
+            BINH_LUAN,
+            NGAY_DG,
+            MA_KS,
+            MA_ND
+        };
+        await model.DANHGIA.create(reviewData);
+        res.status(200).send("Bạn đã tạo đánh giá thành công");
+    } catch (error) {
+        console.error(error);
+>>>>>>> c307a6f952c444fb9a15bcd1c7bcbff7887c1891
         res.status(500).send("Lỗi khi thêm đánh giá");
     }
 };
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> c307a6f952c444fb9a15bcd1c7bcbff7887c1891
 const selectReview = async (req, res) => {
     try {
         const { MA_DG } = req.params;

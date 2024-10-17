@@ -6,8 +6,12 @@ import bookingRoutes from './bookingRoutes.js';
 import discountRoutes from './discountRoutes.js';
 import localRoutes from './localRoutes.js';
 import rateRoutes from './rateRoutes.js';
+<<<<<<< HEAD
 import reviewRoutes from './reviewRoutes.js'; // Thêm import cho reviewRoutes
 
+=======
+import reviewRoutes from './reviewRoutes.js';
+>>>>>>> c307a6f952c444fb9a15bcd1c7bcbff7887c1891
 const rootRouter = express.Router();
 
 rootRouter.use("/user", [userRoutes]);
