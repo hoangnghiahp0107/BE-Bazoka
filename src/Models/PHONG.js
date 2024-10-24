@@ -26,10 +26,6 @@ export default class PHONG extends Model {
       type: DataTypes.STRING(255),
       allowNull: false
     },
-    TRANGTHAIPHG: {
-      type: DataTypes.ENUM('Trống','Đã đặt','Bảo trì'),
-      allowNull: false
-    },
     MA_KS: {
       type: DataTypes.INTEGER,
       allowNull: false,

@@ -8,7 +8,7 @@ hotelRoutes.get("/get-hotel", getHotel);
 hotelRoutes.post("/create-hotel", checkToken, createHotel);
 hotelRoutes.put("/update-hotel/:MA_KS", checkToken, updateHotel);
 hotelRoutes.delete("/delete-hotel/:MA_KS", checkToken, deleteHotel);
-hotelRoutes.get("/search-hotel/:TEN_KS", getSearchNameHotel);
+hotelRoutes.get("/search-hotel/:searchParam", getSearchNameHotel);
 hotelRoutes.get("select-hotel/:TEN_KS", selectHotel);
 hotelRoutes.get("/get-hotel-local/:MA_VITRI", getHotelLocal);
 hotelRoutes.get("/get-hotel-country/:MA_QUOCGIA", getHotelCountry);

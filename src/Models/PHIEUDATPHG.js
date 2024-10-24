@@ -36,7 +36,7 @@ export default class PHIEUDATPHG extends Model {
     },
     MA_MGG: {
       type: DataTypes.STRING(6),
-      allowNull: false,
+      allowNull: true,
       references: {
         model: 'MAGIAMGIA',
         key: 'MA_MGG'
