@@ -28,11 +28,11 @@ export default class NGUOIDUNG extends Model {
     },
     NGAYSINH: {
       type: DataTypes.DATEONLY,
-      allowNull: false
+      allowNull: true
     },
     GIOITINH: {
       type: DataTypes.ENUM('Nam','Nữ'),
-      allowNull: false
+      allowNull: true
     },
     CHUCVU: {
       type: DataTypes.STRING(50),

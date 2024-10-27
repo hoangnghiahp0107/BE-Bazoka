@@ -74,14 +74,13 @@ const updateReview = async (req, res) => {
         if (!token) {
             return res.status(401).send("Người dùng không được xác thực");
         }
-        
+
         const decodedToken = jwt.verify(token, 'MINHNGHIA'); // Giải mã token để lấy thông tin người dùng
         const { MA_ND } = decodedToken.data; // Lấy mã người dùng từ token
-
         const { MA_DG } = req.params; // Lấy mã đánh giá từ tham số
         const { SO_SAO, BINH_LUAN } = req.body; // Lấy thông tin cần cập nhật từ body
 
-        // Kiểm tra xem đánh giá có thuộc về người dùng không
+        // Kiểm tra xem đánh giá có thuộc về người dùng không và lấy bình luận hiện tại
         const review = await model.DANHGIA.findOne({
             where: {
                 MA_DG: MA_DG,
@@ -93,6 +92,10 @@ const updateReview = async (req, res) => {
             return res.status(403).send("Không có quyền chỉnh sửa đánh giá này"); // Không tìm thấy đánh giá
         }
 
+        // Lấy thông tin bình luận hiện tại (nếu cần)
+        const currentRating = review.SO_SAO; // Lấy số sao hiện tại
+        const currentComment = review.BINH_LUAN; // Lấy bình luận hiện tại
+
         // Cập nhật đánh giá
         await model.DANHGIA.update(
             { SO_SAO, BINH_LUAN },
@@ -103,7 +106,11 @@ const updateReview = async (req, res) => {
             }
         );
 
-        res.status(200).send("Cập nhật bình luận thành công");
+        res.status(200).send({
+            message: "Cập nhật bình luận thành công",
+            currentRating, // Trả về số sao hiện tại
+            currentComment // Trả về bình luận hiện tại
+        });
     } catch (error) {
         console.error(error);
         res.status(500).send("Lỗi khi cập nhật bình luận");
@@ -111,42 +118,62 @@ const updateReview = async (req, res) => {
 };
 
 
+
 const deleteReview = async (req, res) => {
     try {
         const token = req.headers.token;
         if (!token) {
-            return res.status(401).send("Người dùng không được xác thực");
+            res.end("Người dùng không được xác thực");
+            return;
         }
         const decodedToken = jwt.verify(token, 'MINHNGHIA');
 
         const { MA_DG } = req.params; // Lấy MA_DG từ tham số URL
         if (!MA_DG) {
-            return res.status(400).send("Mã đánh giá không hợp lệ");
+            res.end("Mã đánh giá không hợp lệ");
+            return;
         }
 
         // Tìm đánh giá để kiểm tra người dùng có quyền xóa hay không
-        const review = await model.DANHGIA.findOne({ where: { MA_DG } });
+        const review = await model.DANHGIA.findOne({ where: { MA_DG: MA_DG } });
         if (!review) {
-            return res.status(404).send("Không tìm thấy đánh giá");
+            res.end("Không tìm thấy đánh giá");
+            return;
         }
+
+        console.log("Token Decoded MA_ND: ", decodedToken.data.MA_ND);
+        console.log("Review MA_ND: ", review.MA_ND);
 
         // Kiểm tra xem người dùng có quyền xóa đánh giá hay không
-        if (decodedToken.data.MA_ND !== review.MA_ND && decodedToken.data.VAITRO !== "Quản lý") {
-            return res.status(403).send("Không có quyền truy cập chức năng này");
+        if (decodedToken.data.MA_ND === review.MA_ND) {
+            // Nếu đánh giá của chính người dùng, cho phép xóa
+            await model.DANHGIA.destroy({ where: { MA_DG } });
+            res.end("Xóa đánh giá thành công");
+        } else if (decodedToken.data.CHUCVU === "Quản lý") {
+            // Nếu là quản lý, cho phép xóa
+            await model.DANHGIA.destroy({ where: { MA_DG } });
+            res.end("Xóa đánh giá thành công");
+        } else {
+            // Nếu không phải là người dùng tạo đánh giá hoặc quản lý, từ chối quyền
+            res.end("Không có quyền truy cập chức năng này");
         }
-
-        // Xóa đánh giá
-        const destroyReview = await model.DANHGIA.destroy({
-            where: { MA_DG }
-        });
-
-        res.status(200).send("Xóa đánh giá thành công");
     } catch (error) {
         console.error(error);
-        res.status(500).send("Lỗi khi xóa đánh giá");
+        res.end("Lỗi khi xóa đánh giá");
     }
 };
 
+// Hàm lấy bình luận của người dùng theo userId và roomId từ cơ sở dữ liệu
+async function getReviewByUserId(userId, roomId) {
+    const comment = await model.DANHGIA.findOne({
+        where: {
+            MA_ND: userId, // ID người dùng
+            MA_PHONG: roomId // ID phòng
+        }
+    });
+
+    return comment || { SO_SAO: 0, BINH_LUAN: "" }; // Trả về bình luận nếu tìm thấy, nếu không trả về mặc định
+}
 
 const getReviewsByRoomId = async (req, res) => {
     try {
@@ -163,4 +190,4 @@ const getReviewsByRoomId = async (req, res) => {
     }
 };
 
-export { getReviews, createReview, selectReview, updateReview, deleteReview, getReviewsByRoomId };
+export { getReviews, createReview, selectReview, updateReview, deleteReview, getReviewsByRoomId, getReviewByUserId };

@@ -19,15 +19,11 @@ export default class PHONG extends Model {
       allowNull: false
     },
     GIATIEN: {
-      type: DataTypes.DECIMAL(10,3),
+      type: DataTypes.INTEGER,
       allowNull: false
     },
     HINHANH: {
       type: DataTypes.STRING(255),
-      allowNull: false
-    },
-    TRANGTHAIPHG: {
-      type: DataTypes.ENUM('Trống','Đã đặt','Bảo trì'),
       allowNull: false
     },
     MA_KS: {

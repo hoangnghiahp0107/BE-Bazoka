@@ -66,5 +66,51 @@ const getProvince = async (req, res) =>{
     }
 }
 
+const getAllLocation = async (req, res) => {
+    try {
+        const data = await model.VITRI.findAll({
+            include: [
+                {
+                    model: model.TINHTHANH,
+                    as: 'MA_TINHTHANH_TINHTHANH',
+                    required: true,
+                    attributes: ['TEN_TINHTHANH'],
+                    include: [
+                        {
+                            model: model.QUOCGIA,
+                            as: 'MA_QUOCGIA_QUOCGIum',
+                            required: true,
+                            attributes: ['TEN_QUOCGIA']
+                        }
+                    ]
+                }
+            ],
+            attributes: ['TENVITRI'] // Chỉ lấy thuộc tính TENVITRI
+        });
 
-export { getCountry, getProvince }
+        // Tạo một Set để lưu trữ các giá trị duy nhất
+        const uniqueValues = new Set();
+
+        // Thêm các giá trị vào Set
+        data.forEach(location => {
+            uniqueValues.add(location.TENVITRI);
+            uniqueValues.add(location.MA_TINHTHANH_TINHTHANH.TEN_TINHTHANH);
+            uniqueValues.add(location.MA_TINHTHANH_TINHTHANH.MA_QUOCGIA_QUOCGIum.TEN_QUOCGIA);
+        });
+
+        // Chuyển đổi Set thành mảng
+        const result = Array.from(uniqueValues);
+
+        // Gửi kết quả
+        res.status(200).send(result);
+    } catch (error) {
+        console.log(error);
+        res.status(500).send('Internal Server Error');
+    }
+};
+
+
+
+
+
+export { getCountry, getProvince, getAllLocation }

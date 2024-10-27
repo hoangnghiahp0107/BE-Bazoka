@@ -11,4 +11,5 @@ reviewRoutes.get("/get-review/:MA_DG", selectReview);
 reviewRoutes.put("/update-review/:MA_DG", checkToken, updateReview);
 reviewRoutes.delete("/delete-review/:MA_DG", checkToken, deleteReview);
 reviewRoutes.get("/reviews/room/:MA_PHONG", getReviewsByRoomId);
+
 export default reviewRoutes;

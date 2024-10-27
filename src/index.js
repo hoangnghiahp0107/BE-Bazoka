@@ -1,5 +1,22 @@
-import express from 'express';
 import cors from 'cors';
+import express from 'express';
+<<<<<<< HEAD
+import cors from 'cors';
+=======
+import dotenv from 'dotenv';
+const app = express();
+dotenv.config();
+app.use(cors()); 
+app.use(express.json())
+app.use(express.urlencoded({ extended: false }));
+
+app.use(express.static("."))
+
+
+app.listen(8080); 
+
+
+>>>>>>> bf4e8c2a189f39ef16eb368fec37ffb5d71b1100
 import rootRoutes from './Routes/rootRoutes.js';
 
 const app = express();
