@@ -22,6 +22,10 @@ export default class KHACHSAN extends Model {
       type: DataTypes.STRING(255),
       allowNull: false
     },
+    SOSAO: {
+      type: DataTypes.INTEGER,
+      allowNull: false
+    },
     TRANGTHAI_KS: {
       type: DataTypes.ENUM('Hoạt động','Ngừng hoạt động'),
       allowNull: false
@@ -37,6 +41,16 @@ export default class KHACHSAN extends Model {
         model: 'VITRI',
         key: 'MA_VITRI'
       }
+    },
+    YEU_CAU_COC: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: 0
+    },
+    TI_LE_COC: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: 0
     }
   }, {
     sequelize,

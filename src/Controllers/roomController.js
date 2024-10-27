@@ -26,7 +26,7 @@ const getDataRoom = async (req, res) => {
 
         // Fetch room types and rooms associated with the hotel MA_KS
         const data = await model.LOAIPHONG.findAll({
-            attributes: ['TENLOAIPHG'],
+            attributes: ['MA_LOAIPHG','TENLOAIPHG'],
             include: [
                 {
                     model: model.PHONG,
@@ -97,6 +97,7 @@ const getDataRoom = async (req, res) => {
             }
 
             return {
+                MA_LOAIPHG: type.MA_LOAIPHG,
                 TENLOAIPHG: type.TENLOAIPHG,
                 SLPHONG: availableRooms.length, // Number of available rooms
                 TRANGTHAI: availableRooms.length === 0 ? "Hết phòng" : "Trống",
@@ -124,7 +125,7 @@ const getDataRoomDay = async (req, res) => {
 
         // Lấy danh sách các loại phòng và các phòng thuộc khách sạn MA_KS
         const data = await model.LOAIPHONG.findAll({
-            attributes: ['TENLOAIPHG'],
+            attributes: ['MA_LOAIPHG', 'TENLOAIPHG'], // Thêm MA_LOAIPHG vào đây
             include: [
                 {
                     model: model.PHONG,
@@ -170,9 +171,7 @@ const getDataRoomDay = async (req, res) => {
                                 ]
                             }
                         ],
-                        TRANGTHAI: {
-                            [Op.ne]: 'Đã hủy'
-                        }
+                        TRANGTHAI: 'Đặt thành công'
                     }
                 });
 
@@ -197,6 +196,7 @@ const getDataRoomDay = async (req, res) => {
             }
 
             return {
+                MA_LOAIPHG: type.MA_LOAIPHG, // Thêm MA_LOAIPHG vào kết quả
                 TENLOAIPHG: type.TENLOAIPHG,
                 SLPHONG: availableRooms.length, // Số lượng phòng trống
                 TRANGTHAI: availableRooms.length === 0 ? "Hết phòng" : "Trống",
@@ -211,6 +211,7 @@ const getDataRoomDay = async (req, res) => {
         res.status(500).send("Lỗi khi lấy dữ liệu");
     }
 };
+
 
 
 const createRoom = async (req, res) =>{

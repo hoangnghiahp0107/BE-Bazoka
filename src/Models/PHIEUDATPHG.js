@@ -57,6 +57,10 @@ export default class PHIEUDATPHG extends Model {
         model: 'PHONG',
         key: 'MA_PHONG'
       }
+    },
+    ORDERCODE: {
+      type: DataTypes.STRING(255),
+      allowNull: true
     }
   }, {
     sequelize,

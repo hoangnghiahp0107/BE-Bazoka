@@ -19,7 +19,7 @@ export default class PHONG extends Model {
       allowNull: false
     },
     GIATIEN: {
-      type: DataTypes.DECIMAL(10,3),
+      type: DataTypes.INTEGER,
       allowNull: false
     },
     HINHANH: {
