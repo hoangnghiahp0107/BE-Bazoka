@@ -18,8 +18,8 @@ const checkToken = (req, res, next) => {
 
 
 const taoToken = (user) => {
-    const { MA_ND, EMAIL, SDT, HOTEN, CHUCVU, ANHDAIDIEN } = user;
-    const data = { MA_ND, EMAIL, SDT, HOTEN, CHUCVU, ANHDAIDIEN };
+    const { MA_ND, EMAIL, SDT, HOTEN, CHUCVU, ANHDAIDIEN, NGAYSINH } = user;
+    const data = { MA_ND, EMAIL, SDT, HOTEN, CHUCVU, ANHDAIDIEN, NGAYSINH };
     return jwt.sign({ data }, "MINHNGHIA", { expiresIn: "7d" });
 };
 

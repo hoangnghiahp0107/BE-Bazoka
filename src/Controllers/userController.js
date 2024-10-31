@@ -201,36 +201,40 @@ const selectUser = async (req, res) => {
     }
 }
 
-const updateUser = async(req, res) =>{
+const updateUser = async (req, res) => {
     try {
         let { MA_ND } = req.params;
-        let { EMAIL, SDT_ND, NGAYSINH, GIOITINH } = req.body;
+        let { EMAIL, HOTEN, MATKHAU, SDT, NGAYSINH, GIOITINH, CHUCVU } = req.body;
         const token = req.headers.token;
 
         if (!token) {
             return res.status(401).send("Người dùng không được xác thực");
         }
+
         const decodedToken = jwt.verify(token, 'MINHNGHIA');
         const currentUserID = decodedToken.data.MA_ND;
+        const currentUserRole = decodedToken.data.CHUCVU;
 
-        if (Number(MA_ND) !== currentUserID) {
+        if (Number(MA_ND) !== currentUserID && currentUserRole !== "Admin") {
             return res.status(403).send("Không có quyền truy cập thông tin người dùng này");
         }
 
         await model.NGUOIDUNG.update(
-            {EMAIL, SDT_ND, NGAYSINH, GIOITINH},
+            { EMAIL, HOTEN, MATKHAU, SDT, NGAYSINH, GIOITINH, CHUCVU },
             {
-                where:{
+                where: {
                     MA_ND
                 }
             }
         );
+
         res.status(200).send("Cập nhật thông tin người dùng thành công!");
     } catch (error) {
-        console.log(error);
+        console.error(error); 
         res.status(500).send("Đã có lỗi trong quá trình xử lý!");
     }
-} 
+};
+
 
 const deleteUser = async (req, res) => {
     try {

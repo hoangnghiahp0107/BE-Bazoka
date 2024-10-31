@@ -16,6 +16,65 @@ const payOS = new PayOS(
     process.env.PAYOS_CHECKSUM_KEY
 );
 
+const getBookingUser = async (req, res) => {
+    try {
+        const token = req.headers.token;
+
+        if (!token) {
+            return res.status(401).send("Người dùng không được xác thực");
+        }
+
+        const decodedToken = jwt.verify(token, 'MINHNGHIA');
+        const currentUserID = decodedToken.data.MA_ND; 
+
+        const data = await model.PHIEUDATPHG.findAll({
+            where: {
+                MA_ND: currentUserID 
+            },
+            include: ['MA_PHONG_PHONG'],
+            order: [
+                [sequelize.literal(`CASE WHEN TRANGTHAI = 'Đặt thành công' THEN 0 ELSE 1 END`)],
+                ['NGAYDATPHG', 'DESC']
+            ]
+        });
+
+        res.status(200).send(data);
+    } catch (error) {
+        console.log(error);
+        res.status(500).send("Lỗi khi lấy dữ liệu");
+    }
+};
+
+
+
+const cancelBookingUser = async (req, res) => {
+    try {
+        const token = req.headers.token;
+        let { MA_DP } = req.params;
+
+        if (!token) {
+            return res.status(401).send("Người dùng không được xác thực");
+        }
+        const [updatedRows] = await model.PHIEUDATPHG.update(
+            { TRANGTHAI: "Đã hủy" }, 
+            {
+                where: {
+                    MA_DP: MA_DP 
+                }
+            }
+        );
+
+        if (updatedRows === 0) {
+            return res.status(404).send("Không tìm thấy mã đặt phòng");
+        }
+
+        res.status(200).send("Cập nhật thành công");
+    } catch (error) {
+        console.log(error);
+        res.status(500).send("Lỗi khi lấy dữ liệu");
+    }
+};
+
 // Utility function to generate a random 6-digit string
 const generateUniqueDescription = async (usedDescriptions) => {
     const getUniqueDescription = () => {
@@ -352,4 +411,4 @@ const bookingRoom = async (req, res) => {
 
 
 
-export { bookingRoomPay, verifyWebhook, bookingRoom };
+export { bookingRoomPay, verifyWebhook, bookingRoom, getBookingUser, cancelBookingUser };
