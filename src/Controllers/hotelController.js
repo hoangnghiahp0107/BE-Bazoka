@@ -176,7 +176,7 @@ const createHotel = async (req, res) =>{
             return res.status(401).send("Người dùng không được xác thực");
         }
         const decodedToken = jwt.verify(token, 'MINHNGHIA');
-        if (decodedToken.data.VAITRO !== "Admin") {
+        if (decodedToken.data.CHUCVU !== "Admin") {
             return res.status(403).send("Không có quyền truy cập chức năng này");
         }
         let { TEN_KS, MO_TA, MA_VITRI, HINHANH} = req.body;

@@ -45,7 +45,29 @@ const getBookingUser = async (req, res) => {
     }
 };
 
-
+const getBookingAll = async (req, res) =>{
+    try {
+        const token = req.headers.token;
+        if(!token){
+            return res.status(401).send("Người dùng không được xác thực");
+        }
+        const decodedToken = jwt.verify(token, 'MINHNGHIA');
+        if (decodedToken.data.CHUCVU !== "Admin") {
+            return res.status(403).send("Không có quyền truy cập chức năng này");
+        }
+        
+        const data = await model.PHIEUDATPHG.findAll({
+            include: ['MA_PHONG_PHONG'],
+            order: [
+                ['NGAYDATPHG', 'DESC']
+            ]
+        });        
+        res.status(200).send(data);
+    } catch (error) {
+        console.log(error);
+        res.status(500).send("Lỗi khi lấy dữ liệu")
+    }
+}
 
 const cancelBookingUser = async (req, res) => {
     try {
@@ -411,4 +433,4 @@ const bookingRoom = async (req, res) => {
 
 
 
-export { bookingRoomPay, verifyWebhook, bookingRoom, getBookingUser, cancelBookingUser };
+export { bookingRoomPay, verifyWebhook, bookingRoom, getBookingUser, cancelBookingUser, getBookingAll };

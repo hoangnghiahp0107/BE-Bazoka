@@ -1,5 +1,5 @@
 import express from "express";
-import { deleteUser, getUserAll, loginAdmin, loginUser, logout, selectUser, signUp, updateUser } from "../Controllers/userController.js";
+import { deleteUser, getUserAll, loginAdmin, loginPartner, loginUser, logout, selectUser, signUp, updateUser } from "../Controllers/userController.js";
 import { checkToken } from "../Config/jwtConfig.js";
 import initModels from "../Models/init-models.js";
 import sequelize from "../Models/index.js";
@@ -27,6 +27,7 @@ const upload = multer({ storage });
 
 userRoutes.post("/sign-up", signUp);
 userRoutes.post("/login-user", loginUser);
+userRoutes.post("/login-partner", loginPartner);
 userRoutes.post("/login-admin", loginAdmin);
 userRoutes.get("/get-user-all", checkToken, getUserAll);
 userRoutes.post("/logout", logout);

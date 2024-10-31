@@ -1,6 +1,7 @@
 import sequelize from "../Models/index.js";
 import initModels from "../Models/init-models.js";
 import { Sequelize } from 'sequelize';
+import jwt from "jsonwebtoken";
 
 const Op = Sequelize.Op;
 const model = initModels(sequelize);
@@ -14,6 +15,38 @@ const getRoom = async (req, res) =>{
         res.status(500).send("Lỗi khi lấy dữ liệu");
     }
 }
+
+const getRoomPartner = async (req, res) => {
+    try {
+        const token = req.headers.token;
+
+        if (!token) {
+            return res.status(401).send("Người dùng không được xác thực");
+        }
+
+        const decodedToken = jwt.verify(token, 'MINHNGHIA');
+        const currentUserRole = decodedToken.data.CHUCVU; 
+
+        const partnerIdMatch = currentUserRole.match(/Partner(\d+)/);
+        const partnerId = partnerIdMatch ? partnerIdMatch[1] : null;
+
+        if (!partnerId) {
+            return res.status(400).send("ID đối tác không hợp lệ");
+        }
+
+        const data = await model.PHONG.findAll({
+            where: {
+                MA_KS: partnerId 
+            },
+        });
+
+        res.status(200).send(data);
+    } catch (error) {
+        console.log(error);
+        res.status(500).send("Lỗi khi lấy dữ liệu");
+    }
+};
+
 
 const getDataRoom = async (req, res) => {
     try {
@@ -432,4 +465,4 @@ const getPriceDiscount = async (req, res) => {
 
 
 
-export { getRoom, createRoom, updateRoom, deleteRoom, selectRoom, getSearchNameRoom, getRoomID, getConvenient, getPrice, getPriceDiscount, getDataRoom, getDataRoomDay } 
+export { getRoom, createRoom, updateRoom, deleteRoom, selectRoom, getSearchNameRoom, getRoomID, getConvenient, getPrice, getPriceDiscount, getDataRoom, getDataRoomDay, getRoomPartner } 

@@ -146,6 +146,47 @@ const loginUser = async (req, res) => {
     }
 };
 
+const loginPartner = async (req, res) => { 
+    try {
+        let { EMAIL, SDT_ND, MATKHAU } = req.body;
+
+        if (!EMAIL && !SDT_ND) {
+            res.status(400).send("Vui lòng cung cấp email hoặc số điện thoại");
+            return;
+        }
+
+        let checkTK = await model.NGUOIDUNG.findOne({
+            where: {
+                [Op.or]: [
+                    EMAIL ? { EMAIL } : {}, 
+                    SDT_ND ? { SDT_ND } : {}
+                ]
+            },
+        });
+
+        if (checkTK) {
+            // Kiểm tra xem CHUCVU có chứa "Partner" hay không
+            if (!checkTK.CHUCVU.includes("Partner")) {
+                res.status(403).send("Chỉ Partner mới có thể đăng nhập");
+                return;
+            }
+            let checkPass = bcrypt.compareSync(MATKHAU, checkTK.MATKHAU);
+            if (checkPass) {
+                let token = taoToken(checkTK);
+                res.status(200).send(token);
+            } else {
+                res.status(400).send("Mật khẩu không đúng");
+            }
+        } else {
+            res.status(400).send("Tài khoản không đúng");
+        }
+    } catch (error) {
+        console.log(error);
+        res.status(500).send("Đã có lỗi trong quá trình xử lý");
+    }
+};
+
+
 
 const getUserAll = async(req, res) =>{
     try {
@@ -278,4 +319,4 @@ const logout = async (req, res) => {
     }
 };
 
-export { signUp, loginUser, getUserAll, logout, selectUser, updateUser, deleteUser, loginAdmin }
+export { signUp, loginUser, getUserAll, logout, selectUser, updateUser, deleteUser, loginAdmin, loginPartner }
