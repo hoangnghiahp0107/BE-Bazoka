@@ -35,13 +35,6 @@ const signUp = async (req, res) => {
             return;
         }
         
-        if (!SDT && !EMAIL) {
-            res.status(400).send("Vui lòng cung cấp ít nhất một trong hai thông tin: Email hoặc Số điện thoại");
-            return;
-        }
-
-        EMAIL = EMAIL || "";
-        SDT = SDT || "";
 
         ANHDAIDIEN = ANHDAIDIEN || "noimg.png";
         CHUCVU = CHUCVU || "Customer";
