@@ -431,6 +431,218 @@ const bookingRoom = async (req, res) => {
     }
 };
 
+//CRUD dành cho Partner
+const createBookingFormPartner = async (req, res) => {
+    try {
+        const token = req.headers.token;
+
+        // Kiểm tra token
+        if (!token) {
+            return res.status(401).send("Người dùng không được xác thực");
+        }
+
+        // Giải mã token
+        const decodedToken = jwt.verify(token, 'MINHNGHIA');
+        const currentUserRole = decodedToken.data.CHUCVU; 
+
+        // Lấy partnerId từ token
+        const partnerIdMatch = currentUserRole.match(/Partner(\d+)/);
+        const partnerId = partnerIdMatch ? partnerIdMatch[1] : null;
+
+        // Kiểm tra ID đối tác
+        if (!partnerId) {
+            return res.status(400).send("ID đối tác không hợp lệ");
+        }
+
+        // Lấy thông tin đặt phòng từ body
+        const { MA_PHONG, NGAYDEN, NGAYDI, SLKHACH, TRANGTHAI, NGAYDATPHG, THANHTIEN, MA_MGG, MA_ND } = req.body;
+
+        // Kiểm tra thông tin đặt phòng
+        if (!MA_PHONG || !NGAYDEN || !NGAYDI || !SLKHACH || !TRANGTHAI || !NGAYDATPHG || !THANHTIEN || !MA_MGG || !MA_ND) {
+            return res.status(400).send("Thông tin đặt phòng không hợp lệ");
+        }
+
+        // Dữ liệu đơn đặt phòng
+        const bookingData = {
+            NGAYDEN,
+            NGAYDI,
+            SLKHACH,
+            TRANGTHAI,
+            NGAYDATPHG,
+            THANHTIEN,
+            MA_MGG,
+            MA_ND,
+            MA_PHONG // thêm MA_PHONG vào đơn đặt phòng
+        };
+
+        // Tạo đơn đặt phòng
+        await model.PHIEUDATPHG.create(bookingData);
+        res.status(200).send("Đơn đặt phòng đã được tạo thành công");
+    } catch (error) {
+        console.error("Lỗi khi tạo đơn đặt phòng:", error);
+        res.status(500).send("Lỗi khi tạo đơn đặt phòng");
+    }
+}
+
+const getBookingFormPartner = async (req, res) => {
+    try {
+        const token = req.headers.token;
+
+        if (!token) {
+            return res.status(401).send("Người dùng không được xác thực");
+        }
+
+        const decodedToken = jwt.verify(token, 'MINHNGHIA');
+        const currentUserRole = decodedToken.data.CHUCVU; 
+
+        const partnerIdMatch = currentUserRole.match(/Partner(\d+)/);
+        const partnerId = partnerIdMatch ? partnerIdMatch[1] : null;
+
+        if (!partnerId) {
+            return res.status(400).send("ID đối tác không hợp lệ");
+        }
+
+        const bookings = await model.PHIEUDATPHG.findAll({
+            include:[{
+                model: model.PHONG,
+                as:'MA_PHONG_PHONG',
+                required: true,
+                where:{
+                    MA_KS: partnerId
+                }
+            }],
+        })
+        res.status(200).send(bookings);
+    } catch (error) {
+        console.log(error);
+        res.status(500).send("Lỗi khi lấy dữ liệu");
+    }
+};
 
 
-export { bookingRoomPay, verifyWebhook, bookingRoom, getBookingUser, cancelBookingUser, getBookingAll };
+const updateBookingFormPartner = async (req, res) => {
+    try {
+        const token = req.headers.token;
+
+        // Kiểm tra token
+        if (!token) {
+            return res.status(401).send("Người dùng không được xác thực");
+        }
+
+        // Giải mã token
+        const decodedToken = jwt.verify(token, 'MINHNGHIA');
+        const currentUserRole = decodedToken.data.CHUCVU;
+
+        // Lấy partnerId từ token
+        const partnerIdMatch = currentUserRole.match(/Partner(\d+)/);
+        const partnerId = partnerIdMatch ? partnerIdMatch[1] : null;
+
+        // Kiểm tra ID đối tác
+        if (!partnerId) {
+            return res.status(400).send("ID đối tác không hợp lệ");
+        }
+
+        const {MA_DP} = req.params;
+
+        // Lấy thông tin cập nhật từ body
+        const {  NGAYDEN, NGAYDI, SLKHACH, TRANGTHAI, NGAYDATPHG, THANHTIEN, MA_MGG, MA_PHONG } = req.body;
+
+        // Kiểm tra thông tin cập nhật
+        if ( !MA_PHONG || !NGAYDEN || !NGAYDI || !SLKHACH || !TRANGTHAI || !NGAYDATPHG || !THANHTIEN || !MA_MGG) {
+            return res.status(400).send("Thông tin cập nhật không hợp lệ");
+        }
+
+        // Cập nhật đơn đặt phòng
+        await model.PHIEUDATPHG.update({
+            MA_PHONG,
+            NGAYDEN,
+            NGAYDI,
+            SLKHACH,
+            TRANGTHAI,
+            NGAYDATPHG,
+            THANHTIEN,
+            MA_MGG
+        },
+        {
+            where:{
+                MA_DP
+            }
+        });
+
+        res.status(200).send("Đơn đặt phòng đã được cập nhật thành công");
+    } catch (error) {
+        console.error("Lỗi khi cập nhật đơn đặt phòng:", error);
+        res.status(500).send("Lỗi khi cập nhật đơn đặt phòng");
+    }
+};
+
+
+
+const deleteBookingFormPartner = async (req, res) => {
+    try {
+        const token = req.headers.token;
+
+        // Kiểm tra token
+        if (!token) {
+            return res.status(401).send("Người dùng không được xác thực");
+        }
+
+        // Giải mã token
+        const decodedToken = jwt.verify(token, 'MINHNGHIA');
+        const currentUserRole = decodedToken.data.CHUCVU;
+
+        // Lấy partnerId từ token
+        const partnerIdMatch = /Partner(\d+)/.exec(currentUserRole);
+        const partnerId = partnerIdMatch ? partnerIdMatch[1] : null;
+
+        // Kiểm tra ID đối tác
+        if (!partnerId) {
+            return res.status(400).send("ID đối tác không hợp lệ");
+        }
+
+        // Lấy MA_PHONG từ params
+        const { MA_DP } = req.params;
+
+        // Kiểm tra xem phòng có thuộc về partner không
+        const room = await model.PHIEUDATPHG.findOne({
+            include:[
+                {
+                    model: model.PHONG,
+                    as: 'MA_PHONG_PHONG',
+                    where: {
+                        MA_KS: partnerId // Kiểm tra MA_KS của phòng có khớp với partnerId không
+                    }
+                }
+            ]
+
+        });
+
+        if (!room) {
+            return res.status(403).send("Bạn không có quyền xóa đơn đặt phòng này");
+        }
+
+        // Xóa phòng
+        const destroyBookingForm = await model.PHIEUDATPHG.destroy({
+            where: {
+                MA_DP: MA_DP,
+            }
+        });
+
+        if (!destroyBookingForm) {
+            return res.status(404).send("Không tìm thấy phòng để xóa");
+        }
+
+        res.status(200).send("Xóa đơn đặt phòng thành công");
+    } catch (error) {
+        console.error("Lỗi khi xóa phòng:", error);
+        
+        // Kiểm tra nếu phòng đã có đơn đặt trước
+        if (error.name === 'SequelizeForeignKeyConstraintError') {
+            return res.status(500).send("Phòng đã được đặt, không thể xóa");
+        }
+        res.status(500).send("Lỗi khi xóa phòng");
+    }
+};
+
+
+export { bookingRoomPay, verifyWebhook, bookingRoom, getBookingUser, cancelBookingUser, getBookingAll, createBookingFormPartner, getBookingFormPartner, updateBookingFormPartner, deleteBookingFormPartner };

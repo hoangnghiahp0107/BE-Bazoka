@@ -16,37 +16,6 @@ const getRoom = async (req, res) =>{
     }
 }
 
-const getRoomPartner = async (req, res) => {
-    try {
-        const token = req.headers.token;
-
-        if (!token) {
-            return res.status(401).send("Người dùng không được xác thực");
-        }
-
-        const decodedToken = jwt.verify(token, 'MINHNGHIA');
-        const currentUserRole = decodedToken.data.CHUCVU; 
-
-        const partnerIdMatch = currentUserRole.match(/Partner(\d+)/);
-        const partnerId = partnerIdMatch ? partnerIdMatch[1] : null;
-
-        if (!partnerId) {
-            return res.status(400).send("ID đối tác không hợp lệ");
-        }
-
-        const data = await model.PHONG.findAll({
-            where: {
-                MA_KS: partnerId 
-            },
-        });
-
-        res.status(200).send(data);
-    } catch (error) {
-        console.log(error);
-        res.status(500).send("Lỗi khi lấy dữ liệu");
-    }
-};
-
 
 const getDataRoom = async (req, res) => {
     try {
@@ -462,7 +431,185 @@ const getPriceDiscount = async (req, res) => {
     }
 };
 
+//CRUD dành cho Partner
+const getRoomPartner = async (req, res) => {
+    try {
+        const token = req.headers.token;
+
+        if (!token) {
+            return res.status(401).send("Người dùng không được xác thực");
+        }
+
+        const decodedToken = jwt.verify(token, 'MINHNGHIA');
+        const currentUserRole = decodedToken.data.CHUCVU; 
+
+        const partnerIdMatch = currentUserRole.match(/Partner(\d+)/);
+        const partnerId = partnerIdMatch ? partnerIdMatch[1] : null;
+
+        if (!partnerId) {
+            return res.status(400).send("ID đối tác không hợp lệ");
+        }
+
+        const data = await model.PHONG.findAll({
+            where: {
+                MA_KS: partnerId 
+            },
+        });
+
+        res.status(200).send(data);
+    } catch (error) {
+        console.log(error);
+        res.status(500).send("Lỗi khi lấy dữ liệu");
+    }
+};
+const createRoomPartner = async (req, res) =>{
+    try {
+        const token = req.headers.token;
+
+        if (!token) {
+            return res.status(401).send("Người dùng không được xác thực");
+        }
+
+        const decodedToken = jwt.verify(token, 'MINHNGHIA');
+        const currentUserRole = decodedToken.data.CHUCVU; 
+
+        const partnerIdMatch = currentUserRole.match(/Partner(\d+)/);
+        const partnerId = partnerIdMatch ? partnerIdMatch[1] : null;
+
+        if (!partnerId) {
+            return res.status(400).send("ID đối tác không hợp lệ");
+        }
+
+        let { TENPHONG, MOTA, GIATIEN, HINHANH, TRANGTHAIPHG, MA_KM, MA_LOAIPHG } = req.body;
+        let roomData = {
+            TENPHONG,
+            MOTA,
+            GIATIEN,
+            HINHANH,
+            TRANGTHAIPHG, 
+            MA_KS: partnerId,
+            MA_KM,
+            MA_LOAIPHG
+        }
+        await model.PHONG.create(roomData);
+        res.status(200).send("Bạn đã tạo phòng thành công");
+    } catch (error) {
+        console.log(error);
+        res.status(500).send("Lỗi khi lấy dữ liệu")
+    }
+}
+
+const updateRoomPartner = async (req, res) => {
+    try {
+        const token = req.headers.token;
+
+        // Kiểm tra token
+        if (!token) {
+            return res.status(401).send("Người dùng không được xác thực");
+        }
+
+        // Giải mã token
+        const decodedToken = jwt.verify(token, 'MINHNGHIA');
+        const currentUserRole = decodedToken.data.CHUCVU; 
+
+        // Lấy partnerId từ token
+        const partnerIdMatch = currentUserRole.match(/Partner(\d+)/);
+        const partnerId = partnerIdMatch ? partnerIdMatch[1] : null;
+
+        // Kiểm tra ID đối tác
+        if (!partnerId) {
+            return res.status(400).send("ID đối tác không hợp lệ");
+        }
+
+        let { MA_PHONG } = req.params;
+        let { TENPHONG, MOTA, GIATIEN, HINHANH, TRANGTHAIPHG, MA_KM, MA_LOAIPHG } = req.body;
+
+        // Kiểm tra xem phòng có thuộc về partner không
+        const room = await model.PHONG.findOne({
+            where: {
+                MA_PHONG: MA_PHONG,
+                MA_KS: partnerId // Kiểm tra MA_KS của phòng có khớp với partnerId không
+            }
+        });
+
+        if (!room) {
+            return res.status(403).send("Bạn không có quyền sửa phòng này");
+        }
+
+        // Cập nhật thông tin phòng
+        await model.PHONG.update(
+            { TENPHONG, MOTA, GIATIEN, HINHANH, TRANGTHAIPHG, MA_KM, MA_LOAIPHG },
+            {
+                where: {
+                    MA_PHONG: MA_PHONG,
+                }
+            }
+        );
+
+        res.status(200).send("Cập nhật phòng thành công");
+    } catch (error) {
+        console.error("Lỗi khi cập nhật phòng:", error); // Ghi lại thông tin lỗi
+        res.status(500).send("Lỗi khi cập nhật phòng");
+    }
+}
 
 
+const deleteRoomPartner = async (req, res) => {
+    try {
+        const token = req.headers.token;
 
-export { getRoom, createRoom, updateRoom, deleteRoom, selectRoom, getSearchNameRoom, getRoomID, getConvenient, getPrice, getPriceDiscount, getDataRoom, getDataRoomDay, getRoomPartner } 
+        // Kiểm tra token
+        if (!token) {
+            return res.status(401).send("Người dùng không được xác thực");
+        }
+
+        // Giải mã token
+        const decodedToken = jwt.verify(token, 'MINHNGHIA');
+        const currentUserRole = decodedToken.data.CHUCVU; 
+
+        // Lấy partnerId từ token
+        const partnerIdMatch = currentUserRole.match(/Partner(\d+)/);
+        const partnerId = partnerIdMatch ? partnerIdMatch[1] : null;
+
+        // Kiểm tra ID đối tác
+        if (!partnerId) {
+            return res.status(400).send("ID đối tác không hợp lệ");
+        }
+
+        // Lấy MA_PHONG từ params
+        const MA_PHONG = req.params.MA_PHONG; // Lấy MA_PHONG từ đường dẫn
+
+        // Kiểm tra xem phòng có thuộc về partner không
+        const room = await model.PHONG.findOne({
+            where: {
+                MA_PHONG: MA_PHONG,
+                MA_KS: partnerId // Kiểm tra MA_KS của phòng có khớp với partnerId không
+            }
+        });
+
+        if (!room) {
+            return res.status(403).send("Bạn không có quyền xóa phòng này hoặc phòng không tồn tại");
+        }
+
+        // Xóa phòng
+        const destroyRoom = await model.PHONG.destroy({
+            where: {
+                MA_PHONG: MA_PHONG,
+                MA_KS: partnerId // Xác nhận lại điều kiện xóa
+            }
+        });
+
+        if (!destroyRoom) {
+            return res.status(404).send("Không tìm thấy phòng");
+        }
+
+        res.status(200).send("Xóa phòng thành công");
+    } catch (error) {
+        console.error("Lỗi khi xóa phòng:", error); // Ghi lại thông tin lỗi
+        res.status(500).send("Phòng đã được đặt không thể xóa");
+    }
+}
+
+
+export { getRoom, createRoom, updateRoom, deleteRoom, selectRoom, getSearchNameRoom, getRoomID, getConvenient, getPrice, getPriceDiscount, getDataRoom, getDataRoomDay, getRoomPartner, createRoomPartner, updateRoomPartner, deleteRoomPartner } 
+
