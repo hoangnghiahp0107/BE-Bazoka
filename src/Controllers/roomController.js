@@ -59,7 +59,6 @@ const getDataRoom = async (req, res) => {
 
         // Fetch room types and rooms associated with the hotel MA_KS
         const data = await model.LOAIPHONG.findAll({
-            attributes: ['MA_LOAIPHG','TENLOAIPHG'],
             include: [
                 {
                     model: model.PHONG,
@@ -158,7 +157,6 @@ const getDataRoomDay = async (req, res) => {
 
         // Lấy danh sách các loại phòng và các phòng thuộc khách sạn MA_KS
         const data = await model.LOAIPHONG.findAll({
-            attributes: ['MA_LOAIPHG', 'TENLOAIPHG'], // Thêm MA_LOAIPHG vào đây
             include: [
                 {
                     model: model.PHONG,
@@ -231,6 +229,9 @@ const getDataRoomDay = async (req, res) => {
             return {
                 MA_LOAIPHG: type.MA_LOAIPHG, // Thêm MA_LOAIPHG vào kết quả
                 TENLOAIPHG: type.TENLOAIPHG,
+                SLKHACH: type.SLKHACH,
+                SLGIUONGDON: type.SLGIUONGDON,
+                SLGIUONGDOI: type.SLGIUONGDOI,
                 SLPHONG: availableRooms.length, // Số lượng phòng trống
                 TRANGTHAI: availableRooms.length === 0 ? "Hết phòng" : "Trống",
                 PHONG: roomToShow, // Phòng hiển thị
@@ -254,7 +255,7 @@ const createRoom = async (req, res) =>{
             return res.status(401).send("Người dùng không được xác thực");
         }
         const decodedToken = jwt.verify(token, 'MINHNGHIA');
-        if (decodedToken.data.VAITRO !== "Admin") {
+        if (decodedToken.data.CHUCVU !== "Admin") {
             return res.status(403).send("Không có quyền truy cập chức năng này");
         }
         let { TENPHONG, MOTA, GIATIEN, HINHANH, TRANGTHAIPHG, MA_KS, MA_KM, MA_LOAIPHG } = req.body;
@@ -301,7 +302,7 @@ const updateRoom = async (req, res) =>{
             return res.status(401).send("Người dùng không được xác thực");
         }
         const decodedToken = jwt.verify(token, 'MINHNGHIA');
-        if (decodedToken.data.VAITRO !== "Quản lý") {
+        if (decodedToken.data.CHUCVU !== "Admin") {
             return res.status(403).send("Không có quyền truy cập chức năng này");
         }
         let { MA_PHONG } = req.params;
@@ -328,7 +329,7 @@ const deleteRoom = async (req, res)=>{
             return res.status(401).send("Người dùng không được xác thực");
         }
         const decodedToken = jwt.verify(token, 'MINHNGHIA');
-        if (decodedToken.data.VAITRO !== "Quản lý") {
+        if (decodedToken.data.CHUCVU !== "Admin") {
             return res.status(403).send("Không có quyền truy cập chức năng này");
         }
         let { MA_PHONG } = req.body;

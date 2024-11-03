@@ -16,6 +16,44 @@ const payOS = new PayOS(
     process.env.PAYOS_CHECKSUM_KEY
 );
 
+const getCountBookingMonth = async (req, res) => {
+    try {
+        const currentYear = new Date().getFullYear(); // Lấy năm hiện tại
+
+        // Đếm số lượng phiếu đặt phòng theo từng tháng
+        const phieuDatPhgCounts = await model.PHIEUDATPHG.findAll({
+            attributes: [
+                [Sequelize.fn('MONTH', Sequelize.col('NGAYDEN')), 'month'], // Lấy tháng từ NGAYDEN
+                [Sequelize.fn('COUNT', Sequelize.col('MA_DP')), 'count'], // Đếm số lượng
+            ],
+            where: {
+                TRANGTHAI: 'Đặt thành công',
+                NGAYDEN: {
+                    [Op.gte]: new Date(currentYear, 0, 1), // Từ đầu năm
+                    [Op.lte]: new Date(currentYear, 11, 31), // Đến cuối năm
+                },
+            },
+            group: ['month'], // Nhóm theo tháng
+            order: [['month', 'ASC']], // Sắp xếp theo tháng
+        });
+
+        // Chuyển đổi dữ liệu thành định dạng dễ đọc
+        const monthlyCounts = Array(12).fill(0); // Mảng để lưu số lượng mỗi tháng
+        phieuDatPhgCounts.forEach(item => {
+            const month = item.dataValues.month - 1; // Tháng (0-11)
+            monthlyCounts[month] = item.dataValues.count; // Cập nhật số lượng
+        });
+
+        // Gửi phản hồi về số lượng đặt phòng theo từng tháng
+        res.json({
+            monthlyCounts, // Gửi số lượng đặt phòng theo từng tháng
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Đã có lỗi xảy ra', error: error.message });
+    }
+};
+
 const getBookingUser = async (req, res) => {
     try {
         const token = req.headers.token;
@@ -433,4 +471,4 @@ const bookingRoom = async (req, res) => {
 
 
 
-export { bookingRoomPay, verifyWebhook, bookingRoom, getBookingUser, cancelBookingUser, getBookingAll };
+export { getCountBookingMonth, bookingRoomPay, verifyWebhook, bookingRoom, getBookingUser, cancelBookingUser, getBookingAll };

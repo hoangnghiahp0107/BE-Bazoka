@@ -55,7 +55,6 @@ export default class KHACHSAN extends Model {
   }, {
     sequelize,
     tableName: 'KHACHSAN',
-    hasTrigger: true,
     timestamps: false,
     indexes: [
       {

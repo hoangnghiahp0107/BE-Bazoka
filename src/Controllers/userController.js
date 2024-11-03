@@ -35,13 +35,6 @@ const signUp = async (req, res) => {
             return;
         }
         
-        if (!SDT && !EMAIL) {
-            res.status(400).send("Vui lòng cung cấp ít nhất một trong hai thông tin: Email hoặc Số điện thoại");
-            return;
-        }
-
-        EMAIL = EMAIL || "";
-        SDT = SDT || "";
 
         ANHDAIDIEN = ANHDAIDIEN || "noimg.png";
         CHUCVU = CHUCVU || "Customer";
@@ -235,7 +228,7 @@ const selectUser = async (req, res) => {
             return res.status(404).send("Không tìm thấy người dùng");
         }
 
-        res.send(data);
+        res.status(200).send(data);
     } catch (error) {
         console.log(error);
         return res.status(500).send("Lỗi xác thực token");
@@ -291,17 +284,28 @@ const deleteUser = async (req, res) => {
         }
 
         let { MA_ND } = req.params;
-        await model.NGUOIDUNG.destroy({
-            where:{
+
+        // Xóa đánh giá liên quan đến người dùng
+        await model.DANHGIA.destroy({
+            where: {
                 MA_ND: MA_ND
             }
         });
-        res.status(200).send("Xóa người dùng thành công!");
+
+        // Xóa người dùng
+        await model.NGUOIDUNG.destroy({
+            where: {
+                MA_ND: MA_ND
+            }
+        });
+        
+        res.status(200).send("Xóa người dùng và đánh giá thành công!");
     } catch (error) {
         console.log(error);
         res.status(500).send("Đã có lỗi trong quá trình xử lý!");
     }
 };
+
 
 const logout = async (req, res) => {
     try {

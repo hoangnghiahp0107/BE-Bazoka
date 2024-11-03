@@ -18,10 +18,6 @@ export default class PHIEUDATPHG extends Model {
       type: DataTypes.DATEONLY,
       allowNull: false
     },
-    SLKHACH: {
-      type: DataTypes.INTEGER,
-      allowNull: false
-    },
     TRANGTHAI: {
       type: DataTypes.STRING(50),
       allowNull: false
@@ -31,7 +27,7 @@ export default class PHIEUDATPHG extends Model {
       allowNull: false
     },
     THANHTIEN: {
-      type: DataTypes.DECIMAL(15,3),
+      type: DataTypes.INTEGER,
       allowNull: false
     },
     MA_MGG: {
@@ -61,11 +57,15 @@ export default class PHIEUDATPHG extends Model {
     ORDERCODE: {
       type: DataTypes.STRING(255),
       allowNull: true
+    },
+    DACOC: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: 0
     }
   }, {
     sequelize,
     tableName: 'PHIEUDATPHG',
-    hasTrigger: true,
     timestamps: false,
     indexes: [
       {

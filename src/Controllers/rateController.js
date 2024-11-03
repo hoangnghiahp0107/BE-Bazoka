@@ -5,6 +5,26 @@ import { Sequelize } from 'sequelize';
 const Op = Sequelize.Op;
 const model = initModels(sequelize);
 
+const countRateStar = async (req, res) => {
+    try {
+        const danhGiaStars = await Promise.all([
+            model.DANHGIA.count({ where: { SO_SAO: 1 } }),
+            model.DANHGIA.count({ where: { SO_SAO: 2 } }),
+            model.DANHGIA.count({ where: { SO_SAO: 3 } }),
+            model.DANHGIA.count({ where: { SO_SAO: 4 } }),
+            model.DANHGIA.count({ where: { SO_SAO: 5 } })
+        ]);
+
+        res.json({
+            danhGiaStars 
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Đã có lỗi xảy ra', error: error.message });
+    }
+};
+
+
 const getRateID = async (req, res) => {
     try {
         const { MA_KS } = req.params;
@@ -84,4 +104,4 @@ const getRateSummary = async (req, res) => {
 
 
 
-export { getRateID, getRateSummary }
+export { getRateID, getRateSummary, countRateStar }
