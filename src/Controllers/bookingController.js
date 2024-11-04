@@ -135,7 +135,6 @@ const cancelBookingUser = async (req, res) => {
     }
 };
 
-// Utility function to generate a random 6-digit string
 const generateUniqueDescription = async (usedDescriptions) => {
     const getUniqueDescription = () => {
         return Math.floor(100000 + Math.random() * 900000).toString(); // Generates a random 6-digit number
@@ -159,17 +158,23 @@ const bookingRoomPay = async (req, res) => {
         }
         const decodedToken = jwt.verify(token, process.env.JWT_SECRET || 'MINHNGHIA');
 
-        let { NGAYDEN, NGAYDI, SLKHACH, NGAYDATPHG, THANHTIEN, MA_MGG, MA_KS, numberOfRooms, LOAIPHONG } = req.body;
+        let { NGAYDEN, NGAYDI, NGAYDATPHG, THANHTIEN, MA_MGG, MA_KS, numberOfRooms, LOAIPHONG, DACOC } = req.body;
         MA_MGG = MA_MGG ? MA_MGG : null;
         NGAYDATPHG = NGAYDATPHG ? new Date(NGAYDATPHG) : new Date();
         const MA_ND = decodedToken.data.MA_ND;
 
         // Kiểm tra các thông tin cần thiết
-        if (!THANHTIEN || isNaN(THANHTIEN)) {
+        if (!THANHTIEN || isNaN(THANHTIEN) || THANHTIEN <= 0) {
             return res.status(400).send("Số tiền không hợp lệ.");
+        }
+        if (!DACOC || isNaN(DACOC) || DACOC <= 0) {
+            return res.status(400).send("Số tiền đặt cọc không hợp lệ.");
         }
         if (!MA_KS) {
             return res.status(400).send("Thông tin khách sạn không hợp lệ.");
+        }
+        if (!LOAIPHONG) {
+            return res.status(400).send("Loại phòng không hợp lệ.");
         }
 
         // Bước 1: Tìm phòng có sẵn dựa trên loại phòng
@@ -187,7 +192,7 @@ const bookingRoomPay = async (req, res) => {
                             as: 'MA_LOAIPHG_LOAIPHONG',
                             required: true,
                             attributes: ['SLKHACH'],
-                            where: { SLKHACH: { [Op.gte]: SLKHACH }, MA_LOAIPHG: LOAIPHONG }
+                            where: { SLKHACH: { [Op.gte]: numberOfRooms }, MA_LOAIPHG: LOAIPHONG }
                         }
                     ]
                 }
@@ -238,36 +243,36 @@ const bookingRoomPay = async (req, res) => {
             return model.PHIEUDATPHG.create({
                 NGAYDEN,
                 NGAYDI,
-                SLKHACH,
                 TRANGTHAI: "Đang chờ thanh toán",
                 NGAYDATPHG,
-                THANHTIEN: THANHTIEN * numberOfRooms, // Chia số tiền cho từng phòng
+                THANHTIEN, // Chia số tiền cho từng phòng
                 MA_MGG,
                 MA_ND,
                 MA_PHONG: roomId,
-                ORDERCODE
+                ORDERCODE,
+                DACOC
             });
         });
 
         await Promise.all(bookingPromises);
 
         // Bước 3: Tạo link thanh toán và trả về cho frontend
-        const YOUR_DOMAIN = 'http://localhost:3000/layouts/';  // Tên miền frontend của bạn
+        const YOUR_DOMAIN = 'http://127.0.0.1:3000/layouts';  // Tên miền frontend của bạn
         const paymentBody = {
             orderCode: ORDERCODE,
-            amount: THANHTIEN,
+            amount: DACOC,
             description: uniqueDescription,
             items: roomsToBook.map((roomId) => ({
                 name: 'Đặt phòng khách sạn',
-                quantity: 1,
-                price: THANHTIEN * numberOfRooms, // Giá cho từng phòng
+                quantity: numberOfRooms,
+                price: DACOC, // Giá cho từng phòng
             })),
-            returnUrl: `${YOUR_DOMAIN}/index.html`,
-            cancelUrl: `${YOUR_DOMAIN}/index.html`,
+            returnUrl: `${YOUR_DOMAIN}/success.html`,
+            cancelUrl: `${YOUR_DOMAIN}/cancel.html`,
         };
 
         const paymentLinkResponse = await payOS.createPaymentLink(paymentBody);
-
+        
         res.status(200).json({
             checkoutUrl: paymentLinkResponse.checkoutUrl
         });
@@ -277,7 +282,6 @@ const bookingRoomPay = async (req, res) => {
         res.status(500).send("Đã có lỗi trong quá trình xử lý");
     }
 };
-
 
 function sortObjDataByKey(object) {
     return Object.keys(object)
@@ -309,7 +313,6 @@ function convertObjToQueryStr(object) {
         .join("&");
 }
 
-// Hàm tạo chữ ký
 const generateSignature = (data, checksumKey) => {
     const sortedData = sortObjDataByKey(data);
     const queryString = convertObjToQueryStr(sortedData);

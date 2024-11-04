@@ -1,6 +1,7 @@
 import sequelize from "../Models/index.js";
 import initModels from "../Models/init-models.js";
 import { Sequelize } from 'sequelize';
+import jwt from "jsonwebtoken";
 
 const Op = Sequelize.Op;
 const model = initModels(sequelize);
@@ -101,7 +102,97 @@ const getRateSummary = async (req, res) => {
     }
 };
 
+const createRate = async (req, res) => {
+    try {
+        const token = req.headers.token;
+        if (!token) {
+            return res.status(401).send("Người dùng không được xác thực");
+        }
+
+        // Giải mã token để lấy thông tin người dùng
+        const decodedToken = jwt.verify(token, 'MINHNGHIA');
+        const userId = decodedToken.data.MA_ND; // Giả sử bạn lưu MA_ND trong token
+
+        let { SO_SAO, BINH_LUAN, MA_KS } = req.body;
+
+        // Kiểm tra các trường cần thiết
+        if (!SO_SAO || !BINH_LUAN || !MA_KS) {
+            return res.status(400).send("Thông tin không đầy đủ");
+        }
+
+        // Kiểm tra xem userId đã có trong PHIEUDATPHG chưa
+        const reservation = await model.PHIEUDATPHG.findOne({
+            where: {
+                MA_ND: userId,
+                TRANGTHAI: "Đặt thành công"
+            },
+            include: [
+                {
+                    model: model.PHONG,
+                    as: 'MA_PHONG_PHONG',
+                    required: true,
+                    where: {
+                        MA_KS: MA_KS
+                    }
+                }
+            ]
+        });
+
+        if (!reservation) {
+            return res.status(403).send("Người dùng chưa sử dụng phòng tại khách sạn");
+        }
+
+        let reviewData = {
+            SO_SAO,
+            BINH_LUAN,
+            NGAY_DG: new Date(), // Đặt ngày đánh giá là ngày hiện tại
+            MA_KS,
+            MA_ND: userId // Sử dụng ID người dùng từ token
+        };
+
+        await model.DANHGIA.create(reviewData);
+        res.status(201).send("Bạn đã tạo đánh giá thành công");
+    } catch (error) {
+        console.error("Lỗi khi thêm đánh giá:", error);
+        res.status(500).send("Lỗi khi thêm đánh giá");
+    }
+};
+
+const selectRate = async (req, res) => {
+    try {
+        const { MA_DG } = req.params;
+        const data = await model.DANHGIA.findOne({
+            where: {
+                MA_DG: MA_DG
+            }
+        });
+        if (!data) {
+            return res.status(404).send("Không tìm thấy đánh giá");
+        }
+        res.status(200).send(data);
+    } catch (error) {
+        console.error(error);
+        res.status(500).send("Lỗi khi lấy dữ liệu đánh giá");
+    }
+};
+
+const deleteRate = async (req, res) =>{
+    try {
+        const { MA_DG } = req.params;
+        const data = await model.DANHGIA.destroy({
+            where: {
+                MA_DG: MA_DG
+            }
+        });
+        if (!data) {
+            return res.status(404).send("Không tìm thấy đánh giá");
+        }
+        res.status(200).send("Bạn đã xóa đánh giá thành công");
+    } catch (error) {
+        console.error(error);
+        res.status(500).send("Lỗi khi lấy dữ liệu đánh giá");
+    }
+}
 
 
-
-export { getRateID, getRateSummary, countRateStar }
+export { getRateID, getRateSummary, countRateStar, createRate, selectRate, deleteRate }
