@@ -6,6 +6,7 @@ import bookingRoutes from './bookingRoutes.js';
 import discountRoutes from './discountRoutes.js';
 import localRoutes from './localRoutes.js';
 import rateRoutes from './rateRoutes.js';
+import reviewRoutes from './reviewRoutes.js';
 
 const rootRouter = express.Router();
 
@@ -15,6 +16,7 @@ rootRouter.use("/hotel", [hotelRoutes]);
 rootRouter.use("/booking", [bookingRoutes]);
 rootRouter.use("/discount", [discountRoutes]);
 rootRouter.use("/local", [localRoutes]);
-rootRouter.use("/rate", [rateRoutes])
+rootRouter.use("/rate", [rateRoutes]);
+rootRouter.use("/review", [reviewRoutes]);
 
 export default rootRouter;
