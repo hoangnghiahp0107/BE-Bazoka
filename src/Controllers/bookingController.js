@@ -735,7 +735,7 @@ const deleteBookingFormPartner = async (req, res) => {
         });
 
         if (!room) {
-            return res.status(403).send("Bạn không có quyền xóa phòng này");
+            return res.status(403).send("Bạn không có quyền xóa đơn đặt phòng này");
         }
 
         // Xóa phòng
@@ -746,10 +746,10 @@ const deleteBookingFormPartner = async (req, res) => {
         });
 
         if (!destroyBookingForm) {
-            return res.status(404).send("Không tìm thấy phòng để xóa");
+            return res.status(404).send("Không tìm thấy đơn đặt phòng để xóa");
         }
 
-        res.status(200).send("Xóa phòng thành công");
+        res.status(200).send("Xóa đơn đặt phòng thành công");
     } catch (error) {
         console.error("Lỗi khi xóa phòng:", error);
         
