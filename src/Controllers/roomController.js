@@ -171,7 +171,13 @@ const getDataRoomDay = async (req, res) => {
                                 ]
                             }
                         ],
-                        TRANGTHAI: 'Đặt thành công'
+                        TRANGTHAI: {
+                            [Op.or]: [
+                                'Đặt thành công',    
+                                'Check-in'            
+                            ]
+                        },
+                        XACNHAN: true
                     }
                 });
 
@@ -215,6 +221,141 @@ const getDataRoomDay = async (req, res) => {
     }
 };
 
+const getDataRoomDayPartner = async (req, res) => {
+    try {
+        const token = req.headers.token;
+
+        // Kiểm tra token
+        if (!token) {
+            return res.status(401).send("Người dùng không được xác thực");
+        }
+
+        // Giải mã token
+        const decodedToken = jwt.verify(token, 'MINHNGHIA');
+        const currentUserRole = decodedToken.data.CHUCVU;
+
+        // Lấy partnerId từ token
+        const partnerIdMatch = currentUserRole.match(/Partner(\d+)/);
+        const partnerId = partnerIdMatch ? partnerIdMatch[1] : null;
+
+        // Kiểm tra ID đối tác
+        if (!partnerId) {
+            return res.status(400).send("ID đối tác không hợp lệ");
+        }
+
+        const { NGAYDEN, NGAYDI } = req.query; // Nhận ngày đến và ngày đi từ query
+
+        const startDate = new Date(NGAYDEN); // Chuyển đổi NGAYDEN thành dạng Date
+        const endDate = new Date(NGAYDI);    // Chuyển đổi NGAYDI thành dạng Date
+
+        // Lấy danh sách các loại phòng và các phòng thuộc khách sạn MA_KS
+        const data = await model.LOAIPHONG.findAll({
+            include: [
+                {
+                    model: model.PHONG,
+                    as: 'PHONGs',
+                    required: true,
+                    where: {
+                        MA_KS: partnerId
+                    },
+                    include: [
+                        {
+                            model: model.KHUYENMAI,
+                            as: 'MA_KM_KHUYENMAI',
+                            required: false,
+                            attributes: ['PHANTRAM', 'TEN_KM']
+                        }
+                    ]
+                }
+            ]
+        });
+
+        // Duyệt qua các loại phòng để kiểm tra trạng thái phòng
+        const result = await Promise.all(data.map(async (type) => {
+            const roomsStatus = await Promise.all(type.PHONGs.map(async (room) => {
+                // Kiểm tra xem phòng này có được đặt trong khoảng thời gian cụ thể không
+                const booking = await model.PHIEUDATPHG.findOne({
+                    where: {
+                        MA_PHONG: room.MA_PHONG,
+                        [Op.or]: [
+                            {
+                                NGAYDEN: {
+                                    [Op.between]: [startDate, endDate]
+                                }
+                            },
+                            {
+                                NGAYDI: {
+                                    [Op.between]: [startDate, endDate]
+                                }
+                            },
+                            {
+                                [Op.and]: [
+                                    { NGAYDEN: { [Op.lte]: startDate } },
+                                    { NGAYDI: { [Op.gte]: endDate } }
+                                ]
+                            }
+                        ],
+                        TRANGTHAI: {
+                            [Op.or]: [
+                                'Đặt thành công',    
+                                'Check-in'            
+                            ]
+                        },
+                        XACNHAN: true
+                    }
+                });
+
+                // Nếu có booking trùng thời gian, phòng không còn trống
+                const isAvailable = booking ? false : true;
+                return { room, isAvailable };
+            }));
+
+            // Lọc ra các phòng trống
+            const availableRooms = roomsStatus.filter(rs => rs.isAvailable).map(rs => rs.room);
+
+            if (availableRooms.length === 0) {
+                // Nếu không có phòng trống, bỏ qua loại phòng này
+                return null;
+            }
+
+            // Tạo ra kết quả cho tất cả các phòng trống
+            const roomsInfo = availableRooms.map(roomToShow => {
+                const giaGoc = roomToShow.GIATIEN;
+                const discountPercent = roomToShow.MA_KM_KHUYENMAI ? roomToShow.MA_KM_KHUYENMAI.PHANTRAM : null;
+                let giaDaGiam = null;
+
+                if (discountPercent !== null) {
+                    // Tính giá đã giảm
+                    giaDaGiam = Math.round(giaGoc * (100 - discountPercent) / 100);
+                }
+
+                return {
+                    MA_LOAIPHG: type.MA_LOAIPHG, // Thêm MA_LOAIPHG vào kết quả
+                    TENLOAIPHG: type.TENLOAIPHG,
+                    SLKHACH: type.SLKHACH,
+                    SLGIUONGDON: type.SLGIUONGDON,
+                    SLGIUONGDOI: type.SLGIUONGDOI,
+                    SLPHONG: availableRooms.length, // Số lượng phòng trống
+                    TRANGTHAI: "Trống", // Chỉ hiển thị phòng trống
+                    PHONG: roomToShow, // Phòng hiển thị
+                    GIADAGIAM: giaDaGiam // Giá đã giảm (nếu có)
+                };
+            });
+
+            return roomsInfo;
+        }));
+
+        // Lọc bỏ các loại phòng không có phòng trống
+        const filteredResult = result.filter(item => item !== null).flat(); // Dùng .flat() để gộp tất cả phòng trống vào một mảng
+
+        res.status(200).send(filteredResult);
+    } catch (error) {
+        console.log(error);
+        res.status(500).send("Lỗi khi lấy dữ liệu");
+    }
+};
+
+
 
 
 const createRoom = async (req, res) =>{
@@ -245,6 +386,7 @@ const createRoom = async (req, res) =>{
         res.status(500).send("Lỗi khi lấy dữ liệu")
     }
 }
+
 
 const selectRoom = async (req, res) =>{
     try {
@@ -443,6 +585,61 @@ const getRoomPartner = async (req, res) => {
         }
 
         const decodedToken = jwt.verify(token, 'MINHNGHIA');
+        const currentUserRole = decodedToken.data.CHUCVU;
+
+        const partnerIdMatch = currentUserRole.match(/Partner(\d+)/);
+        const partnerId = partnerIdMatch ? partnerIdMatch[1] : null;
+
+        if (!partnerId) {
+            return res.status(400).send("ID đối tác không hợp lệ");
+        }
+
+        // Lấy dữ liệu phòng và mã giảm giá của đối tác
+        const data = await model.PHONG.findAll({
+            where: {
+                MA_KS: partnerId
+            },
+            include: ['MA_LOAIPHG_LOAIPHONG', 'MA_KM_KHUYENMAI']
+        });
+
+        // Duyệt qua mỗi phòng và tính GIADAGIAM
+        const result = data.map(room => {
+            const originalPrice = room.GIATIEN; // Giá phòng gốc
+            const discount = room.MA_KM_KHUYENMAI.PHANTRAM; // Phần trăm giảm giá
+            let discountedPrice = originalPrice;
+
+            if (discount) {
+                // Tính giá đã giảm nếu phần trăm giảm giá tồn tại
+                discountedPrice = originalPrice - (originalPrice * discount / 100);
+            }
+
+            // Thêm thuộc tính GIADAGIAM vào kết quả trả về
+            return {
+                ...room.toJSON(),
+                GIADAGIAM: discountedPrice
+            };
+        });
+
+        // Trả về kết quả có tính toán giá đã giảm
+        res.status(200).send(result);
+
+    } catch (error) {
+        console.log(error);
+        res.status(500).send("Lỗi khi lấy dữ liệu");
+    }
+};
+
+
+//CRUD dành cho Partner
+const getRoomAllPartner = async (req, res) => {
+    try {
+        const token = req.headers.token;
+
+        if (!token) {
+            return res.status(401).send("Người dùng không được xác thực");
+        }
+
+        const decodedToken = jwt.verify(token, 'MINHNGHIA');
         const currentUserRole = decodedToken.data.CHUCVU; 
 
         const partnerIdMatch = currentUserRole.match(/Partner(\d+)/);
@@ -453,10 +650,10 @@ const getRoomPartner = async (req, res) => {
         }
 
         const data = await model.PHONG.findAll({
+            attributes: ['MA_PHONG', 'TENPHONG'], // Chỉ lấy MA_PHONG và TENPHONG
             where: {
-                MA_KS: partnerId 
-            },
-            include: ['MA_LOAIPHG_LOAIPHONG', 'MA_KM_KHUYENMAI']
+                MA_KS: partnerId // Lọc phòng theo mã khách sạn (đối tác)
+            }
         });
 
         res.status(200).send(data);
@@ -579,4 +776,4 @@ const deleteRoomPartner = async (req, res) => {
 }
 
 
-export { getRoom, createRoom, updateRoom, deleteRoom, selectRoom, getSearchNameRoom, getRoomID, getConvenient, getPrice, getPriceDiscount, getDataRoom, getDataRoomDay, getRoomPartner, updateRoomPartner, deleteRoomPartner } 
+export { getRoom, createRoom, updateRoom, deleteRoom, selectRoom, getSearchNameRoom, getRoomID, getConvenient, getPrice, getPriceDiscount, getDataRoom, getDataRoomDay, getRoomPartner, updateRoomPartner, deleteRoomPartner, getRoomAllPartner, getDataRoomDayPartner } 

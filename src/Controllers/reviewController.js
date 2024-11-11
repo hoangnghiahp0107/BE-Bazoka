@@ -214,7 +214,8 @@ const getReviewsByHotelId = async (req, res) => {
         const data = await model.DANHGIA.findAll({
             where: {
                 MA_KS: partnerId
-            }
+            },
+            include: ['MA_ND_NGUOIDUNG']
         })
         res.status(200).send(data);
     } catch (error) {

@@ -23,7 +23,7 @@ export default class PHIEUDATPHG extends Model {
       allowNull: false
     },
     NGAYDATPHG: {
-      type: DataTypes.DATEONLY,
+      type: DataTypes.DATE,
       allowNull: false
     },
     THANHTIEN: {
@@ -60,6 +60,11 @@ export default class PHIEUDATPHG extends Model {
     },
     DACOC: {
       type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: 0
+    },
+    XACNHAN: {
+      type: DataTypes.BOOLEAN,
       allowNull: true,
       defaultValue: 0
     }

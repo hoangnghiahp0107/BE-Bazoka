@@ -124,7 +124,7 @@ const createRate = async (req, res) => {
         const reservation = await model.PHIEUDATPHG.findOne({
             where: {
                 MA_ND: userId,
-                TRANGTHAI: "Đặt thành công"
+                TRANGTHAI: "Check-out"
             },
             include: [
                 {

@@ -35,7 +35,7 @@ export default class PHONG extends Model {
       }
     },
     MA_KM: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.STRING(6),
       allowNull: true,
       references: {
         model: 'KHUYENMAI',

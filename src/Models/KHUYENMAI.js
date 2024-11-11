@@ -5,8 +5,7 @@ export default class KHUYENMAI extends Model {
   static init(sequelize, DataTypes) {
   return super.init({
     MA_KM: {
-      autoIncrement: true,
-      type: DataTypes.INTEGER,
+      type: DataTypes.STRING(6),
       allowNull: false,
       primaryKey: true
     },

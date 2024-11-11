@@ -95,10 +95,30 @@ const getBookingAll = async (req, res) =>{
         }
         
         const data = await model.PHIEUDATPHG.findAll({
-            include: ['MA_PHONG_PHONG'],
-            order: [
-                ['NGAYDATPHG', 'DESC']
-            ]
+            include: [
+                {
+                    model: model.PHONG,
+                    as: 'MA_PHONG_PHONG',
+                    attributes: ['TENPHONG'],
+                    required: true,
+                    order: [
+                        ['NGAYDATPHG', 'DESC']
+                    ],
+                    include: [
+                        {
+                            model: model.KHACHSAN,
+                            as: 'MA_KS_KHACHSAN',
+                            attributes: ['TEN_KS']
+                        }
+                    ]
+                },{
+                    model: model.NGUOIDUNG,
+                    as: 'MA_ND_NGUOIDUNG',
+                    attributes: ['EMAIL', 'SDT'],
+                    required: true
+                }
+        ],
+
         });        
         res.status(200).send(data);
     } catch (error) {
@@ -602,7 +622,7 @@ const getBookingFormPartner = async (req, res) => {
         }
 
         const decodedToken = jwt.verify(token, 'MINHNGHIA');
-        const currentUserRole = decodedToken.data.CHUCVU; 
+        const currentUserRole = decodedToken.data.CHUCVU;
 
         const partnerIdMatch = currentUserRole.match(/Partner(\d+)/);
         const partnerId = partnerIdMatch ? partnerIdMatch[1] : null;
@@ -611,6 +631,7 @@ const getBookingFormPartner = async (req, res) => {
             return res.status(400).send("ID đối tác không hợp lệ");
         }
 
+        // Lấy danh sách đặt phòng và sắp xếp theo NGAYDATPHG từ cao đến thấp
         const bookings = await model.PHIEUDATPHG.findAll({
             include: [
                 {
@@ -626,6 +647,9 @@ const getBookingFormPartner = async (req, res) => {
                     as: 'MA_ND_NGUOIDUNG',
                     required: true
                 },
+            ],
+            order: [
+                ['NGAYDATPHG', 'DESC']  // Sắp xếp theo NGAYDATPHG từ cao đến thấp
             ]
         });
 
@@ -635,7 +659,6 @@ const getBookingFormPartner = async (req, res) => {
         res.status(500).send("Lỗi khi lấy dữ liệu");
     }
 };
-
 
 const updateBookingFormPartner = async (req, res) => {
     try {
@@ -656,32 +679,61 @@ const updateBookingFormPartner = async (req, res) => {
 
         // Kiểm tra ID đối tác
         if (!partnerId) {
-            return res.status(400).send("ID đối tác không hợp lệ");
+            return res.status(403).send("ID đối tác không hợp lệ");
         }
 
-        const {MA_DP} = req.params;
+        const { MA_DP } = req.params;
 
         // Lấy thông tin cập nhật từ body
-        const {  NGAYDEN, NGAYDI, SLKHACH, TRANGTHAI, NGAYDATPHG, THANHTIEN, MA_MGG, MA_PHONG } = req.body;
+        let { MA_PHONG, NGAYDEN, NGAYDI, TRANGTHAI, THANHTIEN, MA_MGG, DACOC, XACNHAN } = req.body;
+        MA_MGG = MA_MGG || null;
 
-        // Kiểm tra thông tin cập nhật
-        if ( !MA_PHONG || !NGAYDEN || !NGAYDI || !SLKHACH || !TRANGTHAI || !NGAYDATPHG || !THANHTIEN || !MA_MGG) {
-            return res.status(400).send("Thông tin cập nhật không hợp lệ");
+        // Kiểm tra xem phòng có đang được đặt trong khoảng thời gian đã chọn không
+        const existingBooking = await model.PHIEUDATPHG.findOne({
+            where: {
+                MA_PHONG,
+                [Op.or]: [
+                    // Phòng đã được đặt trong khoảng thời gian cập nhật
+                    {
+                        NGAYDEN: {
+                            [Op.between]: [new Date(NGAYDEN), new Date(NGAYDI)]
+                        }
+                    },
+                    {
+                        NGAYDI: {
+                            [Op.between]: [new Date(NGAYDEN), new Date(NGAYDI)]
+                        }
+                    },
+                    {
+                        [Op.and]: [
+                            { NGAYDEN: { [Op.lte]: new Date(NGAYDEN) } },
+                            { NGAYDI: { [Op.gte]: new Date(NGAYDI) } }
+                        ]
+                    }
+                ],
+                TRANGTHAI: 'Đặt thành công', // Chỉ cần phòng đã được đặt thành công
+                MA_DP: { [Op.ne]: MA_DP } // Không xét cho đơn đặt phòng hiện tại
+            }
+        });
+
+        // Nếu phòng đã được đặt trong khoảng thời gian, không cho phép cập nhật
+        if (existingBooking) {
+            return res.status(400).send("Phòng này đã được đặt trong khoảng thời gian bạn chọn.");
         }
 
-        // Cập nhật đơn đặt phòng
+        // Nếu không có booking trùng, tiến hành cập nhật
         await model.PHIEUDATPHG.update({
             MA_PHONG,
             NGAYDEN,
             NGAYDI,
-            SLKHACH,
             TRANGTHAI,
-            NGAYDATPHG,
             THANHTIEN,
-            MA_MGG
+            MA_MGG,
+            DACOC,
+            XACNHAN
         },
         {
-            where:{
+            where: {
                 MA_DP
             }
         });
@@ -692,6 +744,7 @@ const updateBookingFormPartner = async (req, res) => {
         res.status(500).send("Lỗi khi cập nhật đơn đặt phòng");
     }
 };
+
 
 
 
@@ -761,5 +814,34 @@ const deleteBookingFormPartner = async (req, res) => {
     }
 };
 
+const selectBooking = async (req, res) =>{
+    try {
+        const { MA_DP } = req.params;
+        const data = await model.PHIEUDATPHG.findOne({
+            where:{
+                MA_DP: MA_DP
+            },
+            include: [
+                {
+                    model: model.PHONG,
+                    as: 'MA_PHONG_PHONG',
+                    required: true,
+                },
+                {
+                    model: model.NGUOIDUNG,
+                    as: 'MA_ND_NGUOIDUNG',
+                    required: true
+                },
+            ]
+        })
+        if (!data){
+            return res.status(404).send("Không tìm thấy phiếu đặt phòng");
+        }
+        res.status(200).send(data);
+    } catch (error) {
+        console.log(error);
+        res.status(500).send("Lỗi khi lấy dữ liệu")
+    }
+}
 
-export { getCountBookingMonth, bookingRoomPay, verifyWebhook, bookingRoom, getBookingUser, cancelBookingUser, getBookingAll, createBookingFormPartner, getBookingFormPartner, updateBookingFormPartner, deleteBookingFormPartner };
+export { getCountBookingMonth, bookingRoomPay, verifyWebhook, bookingRoom, getBookingUser, cancelBookingUser, getBookingAll, createBookingFormPartner, getBookingFormPartner, updateBookingFormPartner, deleteBookingFormPartner, selectBooking };

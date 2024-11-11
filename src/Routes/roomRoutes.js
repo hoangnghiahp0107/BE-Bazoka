@@ -1,5 +1,5 @@
 import express from "express";
-import { createRoom, deleteRoom, deleteRoomPartner, getConvenient, getDataRoom, getDataRoomDay, getPrice, getPriceDiscount, getRoom, getRoomPartner, getSearchNameRoom, selectRoom, updateRoom, updateRoomPartner } from "../Controllers/roomController.js";
+import { createRoom, deleteRoom, deleteRoomPartner, getConvenient, getDataRoom, getDataRoomDay, getDataRoomDayPartner, getPrice, getPriceDiscount, getRoom, getRoomAllPartner, getRoomPartner, getSearchNameRoom, selectRoom, updateRoom, updateRoomPartner } from "../Controllers/roomController.js";
 import { checkToken } from "../Config/jwtConfig.js";
 import initModels from "../Models/init-models.js";
 import sequelize from "../Models/index.js";
@@ -29,13 +29,17 @@ roomRoutes.post("/create-room", checkToken, createRoom);
 roomRoutes.put("/update-room/:MA_PHONG", checkToken, updateRoom);
 roomRoutes.delete("/delete-room/:MA_PHONG", checkToken, deleteRoom);
 roomRoutes.get("/search-room/:TENPHONG", checkToken, getSearchNameRoom);
-roomRoutes.get("select-room", selectRoom);
+roomRoutes.get("/select-room/:MA_PHONG", selectRoom);
 roomRoutes.get("/get-convenient/:MA_KS", getConvenient)
 roomRoutes.get("/get-price/:MA_KS", getPrice);
 roomRoutes.get("/get-price-discount/:MA_KS", getPriceDiscount);
 roomRoutes.get("/get-data-room/:MA_KS", getDataRoom);
 roomRoutes.get("/get-data-room-day/:MA_KS", getDataRoomDay);
-roomRoutes.get("/get-room-partner", checkToken, getRoomPartner)
+roomRoutes.get("/get-data-room-day-partner", checkToken, getDataRoomDayPartner);
+
+roomRoutes.get("/get-room-partner", checkToken, getRoomPartner);
+roomRoutes.get("/get-room-all-partner", checkToken, getRoomAllPartner)
+
 roomRoutes.delete("/delete-room-partner/:MA_PHONG", checkToken, deleteRoomPartner)
 
 roomRoutes.post('/create-room-partner', checkToken, upload.fields([{ name: 'HINHANH' }]), async (req, res) => {
@@ -60,7 +64,7 @@ roomRoutes.post('/create-room-partner', checkToken, upload.fields([{ name: 'HINH
         let HINHANH = req.files['HINHANH'] ? path.basename(req.files['HINHANH'][0].path) : null; 
 
         let roomData = {
-            TENPHONG,
+            TENPHONG,   
             MOTA,
             GIATIEN,
             HINHANH,

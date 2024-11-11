@@ -119,10 +119,6 @@ const loginUser = async (req, res) => {
         });
 
         if (checkTK) {
-            if (checkTK.CHUCVU !== "Customer") {
-                res.status(403).send("Chỉ Customer mới có thể đăng nhập");
-                return;
-            }
             let checkPass = bcrypt.compareSync(MATKHAU, checkTK.MATKHAU);
             if (checkPass) {
                 let token = taoToken(checkTK);

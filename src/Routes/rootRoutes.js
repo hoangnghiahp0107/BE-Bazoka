@@ -7,6 +7,7 @@ import discountRoutes from './discountRoutes.js';
 import localRoutes from './localRoutes.js';
 import rateRoutes from './rateRoutes.js';
 import reviewRoutes from './reviewRoutes.js';
+import chatRoutes from './chatRoutes.js';
 
 const rootRouter = express.Router();
 
@@ -18,5 +19,7 @@ rootRouter.use("/discount", [discountRoutes]);
 rootRouter.use("/local", [localRoutes]);
 rootRouter.use("/rate", [rateRoutes]);
 rootRouter.use("/review", [reviewRoutes]);
+rootRouter.use("/chat", [chatRoutes]);
+
 
 export default rootRouter;
