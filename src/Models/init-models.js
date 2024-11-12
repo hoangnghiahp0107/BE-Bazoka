@@ -39,6 +39,8 @@ export default function initModels(sequelize) {
   KHACHSAN.belongsToMany(TIENNGHI, { as: 'MA_TIENNGHI_TIENNGHIs', through: KHACHSAN_TIENNGHI, foreignKey: "MA_KS", otherKey: "MA_TIENNGHI" });
   KHUYENMAI.belongsToMany(KHACHSAN, { as: 'MA_KS_KHACHSANs', through: KHACHSAN_KHUYENMAI, foreignKey: "MA_KM", otherKey: "MA_KS" });
   TIENNGHI.belongsToMany(KHACHSAN, { as: 'MA_KS_KHACHSAN_KHACHSAN_TIENNGHIs', through: KHACHSAN_TIENNGHI, foreignKey: "MA_TIENNGHI", otherKey: "MA_KS" });
+  KHACHSAN.belongsTo(HOSO, { as: "MA_HS_HOSO", foreignKey: "MA_HS"});
+  HOSO.hasMany(KHACHSAN, { as: "KHACHSANs", foreignKey: "MA_HS"});
   DANHGIA.belongsTo(KHACHSAN, { as: "MA_KS_KHACHSAN", foreignKey: "MA_KS"});
   KHACHSAN.hasMany(DANHGIA, { as: "DANHGIa", foreignKey: "MA_KS"});
   KHACHSAN_KHUYENMAI.belongsTo(KHACHSAN, { as: "MA_KS_KHACHSAN", foreignKey: "MA_KS"});
@@ -59,8 +61,6 @@ export default function initModels(sequelize) {
   MAGIAMGIA.hasMany(PHIEUDATPHG, { as: "PHIEUDATPHGs", foreignKey: "MA_MGG"});
   DANHGIA.belongsTo(NGUOIDUNG, { as: "MA_ND_NGUOIDUNG", foreignKey: "MA_ND"});
   NGUOIDUNG.hasMany(DANHGIA, { as: "DANHGIa", foreignKey: "MA_ND"});
-  HOSO.belongsTo(NGUOIDUNG, { as: "MA_ND_NGUOIDUNG", foreignKey: "MA_ND"});
-  NGUOIDUNG.hasMany(HOSO, { as: "HOSOs", foreignKey: "MA_ND"});
   PHIEUDATPHG.belongsTo(NGUOIDUNG, { as: "MA_ND_NGUOIDUNG", foreignKey: "MA_ND"});
   NGUOIDUNG.hasMany(PHIEUDATPHG, { as: "PHIEUDATPHGs", foreignKey: "MA_ND"});
   TINNHAN.belongsTo(NGUOIDUNG, { as: "MA_ND_NGUOIDUNG", foreignKey: "MA_ND"});

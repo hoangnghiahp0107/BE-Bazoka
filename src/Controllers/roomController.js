@@ -605,10 +605,11 @@ const getRoomPartner = async (req, res) => {
         // Duyệt qua mỗi phòng và tính GIADAGIAM
         const result = data.map(room => {
             const originalPrice = room.GIATIEN; // Giá phòng gốc
-            const discount = room.MA_KM_KHUYENMAI.PHANTRAM; // Phần trăm giảm giá
-            let discountedPrice = originalPrice;
+            const discount = room.MA_KM_KHUYENMAI ? room.MA_KM_KHUYENMAI.PHANTRAM : null; // Lấy phần trăm giảm giá nếu có
 
-            if (discount) {
+            let discountedPrice = originalPrice;  // Mặc định là giá phòng gốc
+
+            if (discount !== null && discount !== undefined) {
                 // Tính giá đã giảm nếu phần trăm giảm giá tồn tại
                 discountedPrice = originalPrice - (originalPrice * discount / 100);
             }

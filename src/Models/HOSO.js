@@ -43,24 +43,21 @@ export default class HOSO extends Model {
       allowNull: false
     },
     GIAYPHEPKINHDOANH: {
-      type: DataTypes.BLOB,
+      type: DataTypes.STRING(255),
       allowNull: false
     },
     TRANGTHAI: {
       type: DataTypes.STRING(50),
       allowNull: false
     },
-    MA_ND: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'NGUOIDUNG',
-        key: 'MA_ND'
-      }
+    NGAYDANGKY: {
+      type: DataTypes.DATEONLY,
+      allowNull: false
     }
   }, {
     sequelize,
     tableName: 'HOSO',
+    hasTrigger: true,
     timestamps: false,
     indexes: [
       {
@@ -69,13 +66,6 @@ export default class HOSO extends Model {
         using: "BTREE",
         fields: [
           { name: "MA_HS" },
-        ]
-      },
-      {
-        name: "MA_ND",
-        using: "BTREE",
-        fields: [
-          { name: "MA_ND" },
         ]
       },
     ]

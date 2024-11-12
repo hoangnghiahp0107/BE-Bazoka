@@ -8,6 +8,7 @@ import localRoutes from './localRoutes.js';
 import rateRoutes from './rateRoutes.js';
 import reviewRoutes from './reviewRoutes.js';
 import chatRoutes from './chatRoutes.js';
+import hosoRoutes from './hosoRoutes.js';
 
 const rootRouter = express.Router();
 
@@ -20,6 +21,7 @@ rootRouter.use("/local", [localRoutes]);
 rootRouter.use("/rate", [rateRoutes]);
 rootRouter.use("/review", [reviewRoutes]);
 rootRouter.use("/chat", [chatRoutes]);
+rootRouter.use("/hoso", [hosoRoutes]);
 
 
 export default rootRouter;

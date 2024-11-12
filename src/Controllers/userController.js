@@ -62,9 +62,9 @@ const signUp = async (req, res) => {
 
 const loginAdmin = async (req, res) => { 
     try {
-        let { EMAIL, SDT_ND, MATKHAU } = req.body;
+        let { EMAIL, SDT, MATKHAU } = req.body;
 
-        if (!EMAIL && !SDT_ND) {
+        if (!EMAIL && !SDT) {
             res.status(400).send("Vui lòng cung cấp email hoặc số điện thoại");
             return;
         }
@@ -73,7 +73,7 @@ const loginAdmin = async (req, res) => {
             where: {
                 [Op.or]: [
                     EMAIL ? { EMAIL } : {}, 
-                    SDT_ND ? { SDT_ND } : {}
+                    SDT ? { SDT } : {}
                 ]
             },
         });
@@ -102,9 +102,9 @@ const loginAdmin = async (req, res) => {
 
 const loginUser = async (req, res) => { 
     try {
-        let { EMAIL, SDT_ND, MATKHAU } = req.body;
+        let { EMAIL, SDT, MATKHAU } = req.body;
 
-        if (!EMAIL && !SDT_ND) {
+        if (!EMAIL && !SDT) {
             res.status(400).send("Vui lòng cung cấp email hoặc số điện thoại");
             return;
         }
@@ -113,7 +113,7 @@ const loginUser = async (req, res) => {
             where: {
                 [Op.or]: [
                     EMAIL ? { EMAIL } : {}, 
-                    SDT_ND ? { SDT_ND } : {}
+                    SDT ? { SDT } : {}
                 ]
             },
         });
@@ -137,9 +137,9 @@ const loginUser = async (req, res) => {
 
 const loginPartner = async (req, res) => { 
     try {
-        let { EMAIL, SDT_ND, MATKHAU } = req.body;
+        let { EMAIL, SDT, MATKHAU } = req.body;
 
-        if (!EMAIL && !SDT_ND) {
+        if (!EMAIL && !SDT) {
             res.status(400).send("Vui lòng cung cấp email hoặc số điện thoại");
             return;
         }
@@ -148,7 +148,7 @@ const loginPartner = async (req, res) => {
             where: {
                 [Op.or]: [
                     EMAIL ? { EMAIL } : {}, 
-                    SDT_ND ? { SDT_ND } : {}
+                    SDT ? { SDT } : {}
                 ]
             },
         });

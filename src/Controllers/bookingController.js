@@ -16,18 +16,129 @@ const payOS = new PayOS(
     process.env.PAYOS_CHECKSUM_KEY
 );
 
+const getCountMoneyMonth = async (req, res) => {
+    const token = req.headers.token;
+
+    if (!token) {
+        return res.status(401).send("Người dùng không được xác thực");
+    }
+
+    const decodedToken = jwt.verify(token, 'MINHNGHIA');
+    const currentUserRole = decodedToken.data.CHUCVU;
+
+    const partnerIdMatch = currentUserRole.match(/Partner(\d+)/);
+    const partnerId = partnerIdMatch ? partnerIdMatch[1] : null;
+
+    if (!partnerId) {
+        return res.status(400).send("ID đối tác không hợp lệ");
+    }
+
+    // Lấy ngày hiện tại và tính toán phạm vi 4 tuần trong tháng
+    const currentDate = new Date();
+    const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+
+    // Định nghĩa các tuần trong tháng (với ngày thuần JavaScript)
+    const weeks = [];
+    let startOfWeek = new Date(startOfMonth);
+    for (let i = 0; i < 4; i++) {
+        let endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(startOfWeek.getDate() + 6); // Cuối tuần (chủ nhật)
+        weeks.push({
+            start: startOfWeek.toISOString().split('T')[0],
+            end: endOfWeek.toISOString().split('T')[0]
+        });
+        startOfWeek.setDate(startOfWeek.getDate() + 7); // Cập nhật sang tuần tiếp theo
+    }
+
+    try {
+        const doanhthuPerWeek = [];
+
+        for (let i = 0; i < weeks.length; i++) {
+            const week = weeks[i];
+            const doanhthu = await model.PHIEUDATPHG.findAll({
+                where: {
+                    TRANGTHAI: "Check-out",
+                    [Op.or]: [
+                        {
+                            NGAYDEN: {
+                                [Op.gte]: week.start,
+                                [Op.lte]: week.end
+                            }
+                        },
+                        {
+                            NGAYDI: {
+                                [Op.gte]: week.start,
+                                [Op.lte]: week.end
+                            }
+                        },
+                        {
+                            [Op.and]: [
+                                { NGAYDEN: { [Op.lt]: week.start } },
+                                { NGAYDI: { [Op.gte]: week.start } }
+                            ]
+                        }
+                    ]
+                },
+                include: [
+                    {
+                        model: model.PHONG,
+                        as: 'MA_PHONG_PHONG',
+                        required: true,
+                        include: [
+                            {
+                                model: model.KHACHSAN,
+                                as: 'MA_KS_KHACHSAN',
+                                required: true,
+                                where: {
+                                    MA_KS: partnerId
+                                }
+                            }
+                        ]
+                    }
+                ]
+            });
+
+            // Tính tổng doanh thu cho tuần này
+            const totalRevenue = doanhthu.reduce((total, item) => {
+                return total + item.THANHTIEN; // Giả sử 'TONGTIEN' là thuộc tính chứa doanh thu của phiếu đặt phòng
+            }, 0);
+
+            // Tạo tên tuần như 'TUAN1', 'TUAN2'...
+            const weekName = `TUAN${i + 1}`;
+
+            doanhthuPerWeek.push({
+                week: weekName, // Tên tuần
+                totalRevenue: totalRevenue
+            });
+        }
+
+        // Trả về kết quả doanh thu theo tuần theo dạng bạn yêu cầu
+        return res.status(200).json(doanhthuPerWeek);
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send("Đã xảy ra lỗi khi tính toán doanh thu");
+    }
+};
+
+
+
 const getCountBookingMonth = async (req, res) => {
     try {
         const currentYear = new Date().getFullYear(); // Lấy năm hiện tại
 
-        // Đếm số lượng phiếu đặt phòng theo từng tháng
+        // Đếm số lượng phiếu đặt phòng theo từng tháng với điều kiện TRANGTHAI và XACNHAN
         const phieuDatPhgCounts = await model.PHIEUDATPHG.findAll({
             attributes: [
                 [Sequelize.fn('MONTH', Sequelize.col('NGAYDEN')), 'month'], // Lấy tháng từ NGAYDEN
                 [Sequelize.fn('COUNT', Sequelize.col('MA_DP')), 'count'], // Đếm số lượng
             ],
             where: {
-                TRANGTHAI: 'Đặt thành công',
+                // Lọc theo trạng thái: Đặt thành công, Check-in, Check-out và XACNHAN = true
+                TRANGTHAI: {
+                    [Op.in]: ['Đặt thành công', 'Check-in', 'Check-out'], // Các trạng thái cần tính
+                },
+                XACNHAN: true, // Phải có XACNHAN = true
                 NGAYDEN: {
                     [Op.gte]: new Date(currentYear, 0, 1), // Từ đầu năm
                     [Op.lte]: new Date(currentYear, 11, 31), // Đến cuối năm
@@ -53,6 +164,7 @@ const getCountBookingMonth = async (req, res) => {
         res.status(500).json({ message: 'Đã có lỗi xảy ra', error: error.message });
     }
 };
+
 
 const getBookingUser = async (req, res) => {
     try {
@@ -155,20 +267,6 @@ const cancelBookingUser = async (req, res) => {
     }
 };
 
-const generateUniqueDescription = async (usedDescriptions) => {
-    const getUniqueDescription = () => {
-        return Math.floor(100000 + Math.random() * 900000).toString(); // Generates a random 6-digit number
-    };
-
-    let description;
-    do {
-        description = getUniqueDescription();
-    } while (usedDescriptions.has(description)); // Ensure it's unique
-
-    usedDescriptions.add(description); // Mark it as used
-    return description;
-};
-
 const bookingRoomPay = async (req, res) => {
     try {
         const token = req.headers.token;
@@ -253,24 +351,21 @@ const bookingRoomPay = async (req, res) => {
             return res.status(404).send("Không có phòng phù hợp để đặt.");
         }
 
-        // Generate a unique description for the payment link
-        const usedDescriptions = new Set(); // To track already used descriptions
-        const uniqueDescription = await generateUniqueDescription(usedDescriptions);
-
         // Bước 2: Tạo bản ghi đặt phòng cho từng phòng
         const ORDERCODE = Number(String(Date.now()).slice(-6));
         const bookingPromises = roomsToBook.map((roomId) => {
             return model.PHIEUDATPHG.create({
                 NGAYDEN,
                 NGAYDI,
-                TRANGTHAI: "Đang chờ thanh toán",
+                TRANGTHAI: "Đặt thành công",
                 NGAYDATPHG,
                 THANHTIEN, // Chia số tiền cho từng phòng
                 MA_MGG,
                 MA_ND,
                 MA_PHONG: roomId,
                 ORDERCODE,
-                DACOC
+                DACOC,
+                XACNHAN: 1
             });
         });
 
@@ -281,7 +376,7 @@ const bookingRoomPay = async (req, res) => {
         const paymentBody = {
             orderCode: ORDERCODE,
             amount: DACOC,
-            description: uniqueDescription,
+            description: `MA_KS: ${MA_KS}`,  // Sửa lại đây để dùng thông tin mã khách sạn
             items: roomsToBook.map((roomId) => ({
                 name: 'Đặt phòng khách sạn',
                 quantity: numberOfRooms,
@@ -302,6 +397,7 @@ const bookingRoomPay = async (req, res) => {
         res.status(500).send("Đã có lỗi trong quá trình xử lý");
     }
 };
+
 
 function sortObjDataByKey(object) {
     return Object.keys(object)
@@ -844,4 +940,4 @@ const selectBooking = async (req, res) =>{
     }
 }
 
-export { getCountBookingMonth, bookingRoomPay, verifyWebhook, bookingRoom, getBookingUser, cancelBookingUser, getBookingAll, createBookingFormPartner, getBookingFormPartner, updateBookingFormPartner, deleteBookingFormPartner, selectBooking };
+export { getCountBookingMonth, bookingRoomPay, verifyWebhook, bookingRoom, getBookingUser, cancelBookingUser, getBookingAll, createBookingFormPartner, getBookingFormPartner, updateBookingFormPartner, deleteBookingFormPartner, selectBooking, getCountMoneyMonth };

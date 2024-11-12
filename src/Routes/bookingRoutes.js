@@ -1,5 +1,5 @@
 import express from "express";
-import { bookingRoom, bookingRoomPay, cancelBookingUser, createBookingFormPartner, deleteBookingFormPartner, getBookingAll, getBookingFormPartner, getBookingUser, getCountBookingMonth, selectBooking, updateBookingFormPartner, verifyWebhook } from "../Controllers/bookingController.js";
+import { bookingRoom, bookingRoomPay, cancelBookingUser, createBookingFormPartner, deleteBookingFormPartner, getBookingAll, getBookingFormPartner, getBookingUser, getCountBookingMonth, getCountMoneyMonth, selectBooking, updateBookingFormPartner, verifyWebhook } from "../Controllers/bookingController.js";
 import { checkToken } from "../Config/jwtConfig.js";
 
 const bookingRoutes = express.Router();
@@ -10,6 +10,7 @@ bookingRoutes.post("/booking-room", checkToken, bookingRoom);
 bookingRoutes.get("/get-booking-user", checkToken, getBookingUser);
 bookingRoutes.get("/get-booking-all", checkToken, getBookingAll);
 bookingRoutes.get("/get-count-booking", checkToken, getCountBookingMonth);
+bookingRoutes.get("/get-count-money-partner", checkToken, getCountMoneyMonth);
 bookingRoutes.put("/cancel-booking-user/:MA_DP", checkToken, cancelBookingUser);
 bookingRoutes.get("/get-booking-partner", checkToken, getBookingFormPartner);
 bookingRoutes.post("/create-booking-partner", checkToken, createBookingFormPartner);

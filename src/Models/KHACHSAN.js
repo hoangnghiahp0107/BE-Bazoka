@@ -30,13 +30,13 @@ export default class KHACHSAN extends Model {
       type: DataTypes.ENUM('Hoạt động','Ngừng hoạt động'),
       allowNull: false
     },
-    QRTHANHTOAN: {
+    DIACHI: {
       type: DataTypes.STRING(255),
       allowNull: false
     },
     MA_VITRI: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
       references: {
         model: 'VITRI',
         key: 'MA_VITRI'
@@ -51,6 +51,14 @@ export default class KHACHSAN extends Model {
       type: DataTypes.INTEGER,
       allowNull: true,
       defaultValue: 0
+    },
+    MA_HS: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'HOSO',
+        key: 'MA_HS'
+      }
     }
   }, {
     sequelize,
@@ -70,6 +78,13 @@ export default class KHACHSAN extends Model {
         using: "BTREE",
         fields: [
           { name: "MA_VITRI" },
+        ]
+      },
+      {
+        name: "MA_HS",
+        using: "BTREE",
+        fields: [
+          { name: "MA_HS" },
         ]
       },
     ]
