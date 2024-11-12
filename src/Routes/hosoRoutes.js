@@ -5,7 +5,7 @@ import sequelize from "../Models/index.js";
 import multer from "multer";
 import path from "path";
 import fs from "fs"; 
-import { getDataHoso } from "../Controllers/hosoController.js";
+import { accessHoSo, denyHoso, getDataHoso } from "../Controllers/hosoController.js";
 const hosoRoutes = express.Router();
 
 const model = initModels(sequelize);
@@ -105,5 +105,7 @@ hosoRoutes.post('/find-hoso', async (req, res) => {
 });
 
 hosoRoutes.get("/get-data-hoso", checkToken, getDataHoso);
+hosoRoutes.put("/deny-hoso/:MA_HS", checkToken, denyHoso);
+hosoRoutes.put("/access-hoso/:MA_HS", checkToken, accessHoSo);
 
 export default hosoRoutes;

@@ -36,7 +36,13 @@ const getData = async (req, res) => {
 
         const phieuDatPhgCount = await model.PHIEUDATPHG.count({
             where: {
-                TRANGTHAI: 'Đặt thành công'
+                TRANGTHAI: {
+                    [Op.or]: [
+                        'Đặt thành công',    
+                        'Check-in',
+                        'Check-out'           
+                    ]
+                },
             }
         });
 
@@ -320,7 +326,12 @@ const getSearchNameHotel = async (req, res) => {
                 const bookings = await model.PHIEUDATPHG.findAll({
                     where: {
                         MA_PHONG: room.MA_PHONG,
-                        TRANGTHAI: 'Đặt thành công',
+                        TRANGTHAI: {
+                            [Op.or]: [
+                                'Đặt thành công',    
+                                'Check-in'            
+                            ]
+                        },                        XACNHAN: 1,
                         [Op.or]: [
                             {
                                 NGAYDEN: { [Op.between]: [new Date(NGAYDEN), new Date(NGAYDI)] }

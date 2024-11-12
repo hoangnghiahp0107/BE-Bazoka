@@ -531,6 +531,7 @@ const bookingRoom = async (req, res) => {
                     where: {
                         MA_PHONG: room.MA_PHONG,
                         TRANGTHAI: 'Đặt thành công',
+                        XACNHAN: 1,
                         [Op.or]: [
                             { NGAYDEN: { [Op.between]: [new Date(NGAYDEN), new Date(NGAYDI)] } },
                             { NGAYDI: { [Op.between]: [new Date(NGAYDEN), new Date(NGAYDI)] } },
@@ -564,13 +565,13 @@ const bookingRoom = async (req, res) => {
                 NGAYDEN,
                 NGAYDI,
                 SLKHACH,
-                TRANGTHAI: "Đặt thành công", // Trạng thái là "Đặt thành công"
+                TRANGTHAI: "Đặt thành công",
                 NGAYDATPHG,
-                THANHTIEN, // Tổng số tiền
+                THANHTIEN, 
                 MA_MGG,
                 MA_ND,
                 MA_PHONG: roomId,
-                ORDERCODE: null // Bỏ trống ORDERCODE
+                ORDERCODE: null
             });
         });
 

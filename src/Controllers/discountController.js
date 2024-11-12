@@ -16,6 +16,47 @@ const getDiscount = async (req, res) =>{
     }
 }
 
+const getDiscountUser = async (req, res) => {
+    try {
+        const token = req.headers.token; // Lấy token từ header
+
+        // Kiểm tra xem token có tồn tại không
+        if (!token) {
+            return res.status(401).send("Người dùng không được xác thực");
+        }
+
+        // Giải mã token để lấy thông tin người dùng
+        const decodedToken = jwt.verify(token, process.env.JWT_SECRET || 'MINHNGHIA');
+        const MA_ND = decodedToken.data.MA_ND; // Mã người dùng từ token
+
+        // Lấy danh sách mã giảm giá mà người dùng đã sử dụng
+        const usedDiscounts = await model.PHIEUDATPHG.findAll({
+            where: {
+                MA_ND: MA_ND,
+                TRANGTHAI: "Đặt thành công", // Đảm bảo đơn hàng đã được đặt thành công
+                XACNHAN: 1 // Đảm bảo đơn hàng đã được xác nhận
+            },
+            attributes: ['MA_MGG'] // Chỉ lấy MA_MGG (mã giảm giá) đã sử dụng
+        });
+
+        // Lấy danh sách mã giảm giá có thể sử dụng (tất cả mã giảm giá)
+        const allDiscounts = await model.MAGIAMGIA.findAll();
+
+        // Chuyển danh sách mã giảm giá đã sử dụng thành mảng các mã giảm giá
+        const usedDiscountCodes = usedDiscounts.map(item => item.MA_MGG);
+
+        // Lọc ra những mã giảm giá mà người dùng chưa sử dụng
+        const availableDiscounts = allDiscounts.filter(discount => !usedDiscountCodes.includes(discount.MA_MGG));
+
+        res.status(200).send(availableDiscounts);
+
+    } catch (error) {
+        console.log(error);
+        res.status(500).send("Lỗi khi lấy dữ liệu");
+    }
+}
+
+
 const getDiscountPartner = async (req, res) =>{
     try {
         const token = req.headers.token;
@@ -374,6 +415,57 @@ const selectDiscount = async (req, res) =>{
     }
 }
 
+    const applyDiscount = async (req, res) => {
+        try {
+            const { MA_MGG } = req.params; // Lấy mã giảm giá từ request params
+            const token = req.headers.token; // Lấy token từ header
+
+            // Kiểm tra xem token có tồn tại không
+            if (!token) {
+                return res.status(401).send("Người dùng không được xác thực");
+            }
+
+            // Giải mã token để lấy thông tin người dùng
+            const decodedToken = jwt.verify(token, process.env.JWT_SECRET || 'MINHNGHIA');
+            const MA_ND = decodedToken.data.MA_ND; // Mã người dùng từ token
+
+            // Kiểm tra xem MA_ND và MA_MGG đã tồn tại trong PHIEUDATPHG chưa
+            const existingBooking = await model.PHIEUDATPHG.findOne({
+                where: {
+                    MA_ND: MA_ND,
+                    MA_MGG: MA_MGG
+                }
+            });
+
+            // Nếu đã tồn tại thì trả về lỗi
+            if (existingBooking) {
+                return res.status(400).send("Mã giảm giá này đã được sử dụng cho người dùng này.");
+            }
+
+            // Kiểm tra xem mã giảm giá có tồn tại trong bảng MAGIAMGIA không
+            const discount = await model.MAGIAMGIA.findOne({
+                where: {
+                    MA_MGG: MA_MGG
+                }
+            });
+
+            // Nếu không tìm thấy mã giảm giá trong bảng MAGIAMGIA
+            if (!discount) {
+                return res.status(404).send("Không tìm thấy mã giảm giá.");
+            }
+
+            // Trả về thông tin mã giảm giá nếu tất cả các điều kiện đều thỏa mãn
+            res.status(200).send(discount);
+
+        } catch (error) {
+            // Xử lý lỗi nếu có
+            console.log(error);
+            res.status(500).send("Lỗi khi lấy dữ liệu");
+        }
+    };
+
+
+
 const selectDiscountPartner = async (req, res) =>{
     try {
         const { MA_KM } = req.params;
@@ -392,4 +484,4 @@ const selectDiscountPartner = async (req, res) =>{
     }
 }
 
-export { getDiscount, deleteDiscount, selectDiscountPartner, createDiscount, updateDiscount, selectDiscount, getDiscountPartner, createDiscountPartner, updateDiscountPartner, deleteDiscountPartner }
+export { getDiscount, deleteDiscount, selectDiscountPartner, createDiscount, updateDiscount, selectDiscount, getDiscountPartner, createDiscountPartner, updateDiscountPartner, deleteDiscountPartner, applyDiscount, getDiscountUser }
