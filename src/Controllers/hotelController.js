@@ -331,7 +331,8 @@ const getSearchNameHotel = async (req, res) => {
                                 'Đặt thành công',    
                                 'Check-in'            
                             ]
-                        },                        XACNHAN: 1,
+                        },                        
+                        XACNHAN: 1,
                         [Op.or]: [
                             {
                                 NGAYDEN: { [Op.between]: [new Date(NGAYDEN), new Date(NGAYDI)] }

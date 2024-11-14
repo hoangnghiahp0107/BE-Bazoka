@@ -33,9 +33,6 @@ const sendSupportHotel = async (req, res, io) => {
         await model.TINNHAN.create(chatData);
         res.status(200).send("Gửi tin nhắn thành công!");
 
-        // Sử dụng socket.io để gửi tin nhắn đến tất cả các client đã kết nối
-        io.emit('newMessage', chatData); // Gửi tin nhắn cho tất cả client
-
     } catch (error) {
         console.log(error);
         res.status(500).send("Lỗi khi gửi dữ liệu");
@@ -76,9 +73,6 @@ const sendSupportCustomer = async (req, res, io) => {
 
         await model.TINNHAN.create(chatData);
         res.status(200).send("Gửi tin nhắn thành công!");
-
-        // Sử dụng socket.io để gửi tin nhắn đến tất cả các client đã kết nối
-        io.emit('newMessage', chatData); // Gửi tin nhắn cho tất cả client
 
     } catch (error) {
         console.log(error);

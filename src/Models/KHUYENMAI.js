@@ -24,6 +24,14 @@ export default class KHUYENMAI extends Model {
     NGAYKETTHUC: {
       type: DataTypes.DATEONLY,
       allowNull: false
+    },
+    MA_KS: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: 'KHACHSAN',
+        key: 'MA_KS'
+      }
     }
   }, {
     sequelize,
@@ -36,6 +44,13 @@ export default class KHUYENMAI extends Model {
         using: "BTREE",
         fields: [
           { name: "MA_KM" },
+        ]
+      },
+      {
+        name: "MA_KS",
+        using: "BTREE",
+        fields: [
+          { name: "MA_KS" },
         ]
       },
     ]

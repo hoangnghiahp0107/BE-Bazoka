@@ -486,7 +486,7 @@ const getRoomID = async (req, res) => {
 
 const getConvenient = async (req, res) =>{
     const { MA_KS } = req.params;
-    const data = await model.KHACHSAN_TIENNGHI.findAll({
+    const data = await model.TIENNGHI.findAll({
         where:{
             MA_KS: MA_KS
         }

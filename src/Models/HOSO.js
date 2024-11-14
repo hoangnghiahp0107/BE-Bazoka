@@ -53,6 +53,10 @@ export default class HOSO extends Model {
     NGAYDANGKY: {
       type: DataTypes.DATEONLY,
       allowNull: false
+    },
+    MA_VITRI: {
+      type: DataTypes.INTEGER,
+      allowNull: false
     }
   }, {
     sequelize,

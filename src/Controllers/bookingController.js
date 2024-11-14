@@ -181,7 +181,21 @@ const getBookingUser = async (req, res) => {
             where: {
                 MA_ND: currentUserID 
             },
-            include: ['MA_PHONG_PHONG'],
+            include: [
+                {
+                    model: model.PHONG,
+                    as: 'MA_PHONG_PHONG',
+                    required: true,
+                    include: [
+                        {
+                            model: model.KHACHSAN,
+                            as: 'MA_KS_KHACHSAN',
+                            required: true,
+                            attributes: ['MA_KS']
+                        }
+                    ]
+                }
+            ],
             order: [
                 [sequelize.literal(`CASE WHEN TRANGTHAI = 'Đặt thành công' THEN 0 ELSE 1 END`)],
                 ['NGAYDATPHG', 'DESC']

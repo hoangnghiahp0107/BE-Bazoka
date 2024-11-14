@@ -11,8 +11,16 @@ export default class TIENNGHI extends Model {
       primaryKey: true
     },
     TENTIENNGHI: {
-      type: DataTypes.STRING(100),
+      type: DataTypes.STRING(255),
       allowNull: false
+    },
+    MA_KS: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: 'KHACHSAN',
+        key: 'MA_KS'
+      }
     }
   }, {
     sequelize,
@@ -25,6 +33,13 @@ export default class TIENNGHI extends Model {
         using: "BTREE",
         fields: [
           { name: "MA_TIENNGHI" },
+        ]
+      },
+      {
+        name: "MA_KS",
+        using: "BTREE",
+        fields: [
+          { name: "MA_KS" },
         ]
       },
     ]
