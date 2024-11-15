@@ -1,9 +1,46 @@
 import sequelize from "../Models/index.js";
 import initModels from "../Models/init-models.js";
 import { Sequelize } from 'sequelize';
+import jwt from "jsonwebtoken";
 
 const Op = Sequelize.Op;
 const model = initModels(sequelize);
+
+const createTienNghi = async (req, res) => {
+    try {
+        const token = req.headers.token;
+
+        if (!token) {
+            return res.status(401).send("Người dùng không được xác thực");
+        }
+
+        const decodedToken = jwt.verify(token, 'MINHNGHIA');
+        const currentUserRole = decodedToken.data.CHUCVU;
+
+        const partnerIdMatch = /Partner(\d+)/.exec(currentUserRole);
+        const partnerId = partnerIdMatch ? partnerIdMatch[1] : null;
+
+        if (!partnerId) {
+            return res.status(400).send("ID đối tác không hợp lệ");
+        }
+
+        const { TENTIENNGHI, ICON} = req.body;
+
+        const tiennghiData = {
+            TENTIENNGHI,
+            ICON,
+            MA_KS: partnerId
+        };
+
+        await model.TIENNGHI.create(tiennghiData);
+
+        res.status(200).send("Bạn đã tạo tiện nghi thành công!");
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).send("Lỗi khi thêm dữ liệu");
+    }
+};
 
 const getCountry = async (req, res) => {
     try {
@@ -66,6 +103,49 @@ const getProvince = async (req, res) =>{
     }
 }
 
+const getTienNghi = async (req, res) => {
+    try {
+        const token = req.headers.token;
+
+        if (!token) {
+            return res.status(401).send("Người dùng không được xác thực");
+        }
+
+        const decodedToken = jwt.verify(token, 'MINHNGHIA');
+        const currentUserRole = decodedToken.data.CHUCVU; 
+
+        const partnerIdMatch = currentUserRole.match(/Partner(\d+)/);
+        const partnerId = partnerIdMatch ? partnerIdMatch[1] : null;
+
+        if (!partnerId) {
+            return res.status(400).send("ID đối tác không hợp lệ");
+        }
+
+        const data = await model.TIENNGHI.findAll({
+            where: {
+                MA_KS: partnerId // Lọc phòng theo mã khách sạn (đối tác)
+            }
+        });
+
+        res.status(200).send(data);
+    } catch (error) {
+        console.log(error);
+        res.status(500).send("Lỗi khi lấy dữ liệu");
+    }
+};
+
+const getAllDiaDiem = async (req, res) =>{
+    try {
+        const data = await model.VITRI.findAll({
+            attributes: ['MA_VITRI', 'TENVITRI']
+        })
+        res.status(200).send(data);
+    } catch (error) {
+        console.log(error);
+        res.status(500).send("Lỗi khi lấy dữ liệu");
+    }
+}
+
 const getAllLocation = async (req, res) => {
     try {
         const data = await model.VITRI.findAll({
@@ -109,8 +189,4 @@ const getAllLocation = async (req, res) => {
     }
 };
 
-
-
-
-
-export { getCountry, getProvince, getAllLocation }
+export { getCountry, getProvince, getAllLocation, getAllDiaDiem, getTienNghi, createTienNghi }

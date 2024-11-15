@@ -34,7 +34,7 @@ const upload = multer({ storage });
 hosoRoutes.post('/create-hoso', upload.fields([{ name: 'HINHANH' }, { name: 'GIAYPHEPKINHDOANH' }]), async (req, res) => {
     try {
         // Lấy dữ liệu từ body
-        let { HOTEN, EMAIL, SDT, TEN_KS, DIACHI, MO_TA, SOSAO, TRANGTHAI, NGAYDANGKY } = req.body;
+        let { HOTEN, EMAIL, SDT, TEN_KS, DIACHI, MO_TA, SOSAO, TRANGTHAI, NGAYDANGKY, MA_VITRI } = req.body;
 
         // Lưu hình ảnh nếu có
         let HINHANH = req.files['HINHANH'] ? path.basename(req.files['HINHANH'][0].path) : null;
@@ -61,7 +61,8 @@ hosoRoutes.post('/create-hoso', upload.fields([{ name: 'HINHANH' }, { name: 'GIA
             MO_TA,
             HINHANH,
             SOSAO,
-            GIAYPHEPKINHDOANH  // Lưu đường dẫn tệp giấy phép
+            GIAYPHEPKINHDOANH,  // Lưu đường dẫn tệp giấy phép
+            MA_VITRI
         };
 
         // Lưu hồ sơ vào cơ sở dữ liệu

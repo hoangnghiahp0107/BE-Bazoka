@@ -240,11 +240,13 @@ const getBookingAll = async (req, res) =>{
                 },{
                     model: model.NGUOIDUNG,
                     as: 'MA_ND_NGUOIDUNG',
-                    attributes: ['EMAIL', 'SDT'],
+                    attributes: ['HOTEN','EMAIL', 'SDT'],
                     required: true
                 }
         ],
-
+        where: {
+            TRANGTHAI: "Đã hủy"
+        }
         });        
         res.status(200).send(data);
     } catch (error) {
@@ -262,7 +264,7 @@ const cancelBookingUser = async (req, res) => {
             return res.status(401).send("Người dùng không được xác thực");
         }
         const [updatedRows] = await model.PHIEUDATPHG.update(
-            { TRANGTHAI: "Đã hủy" }, 
+            { TRANGTHAI: "Đã hủy", XACNHAN: 0 }, 
             {
                 where: {
                     MA_DP: MA_DP 
@@ -442,6 +444,70 @@ function convertObjToQueryStr(object) {
         })
         .join("&");
 }
+
+const denyHoanTien = async (req, res) => {
+    try {
+        const token = req.headers.token;
+        if (!token) {
+            return res.status(401).send("Người dùng không được xác thực");
+        }
+
+        const decodedToken = jwt.verify(token, 'MINHNGHIA');
+        if (decodedToken.data.CHUCVU !== "Admin") {
+            return res.status(403).send("Không có quyền truy cập chức năng này");
+        }
+
+        const { MA_DP } = req.params;
+        if (!MA_DP) {
+            return res.status(400).send("Mã đặt phòng không hợp lệ");
+        }
+
+        await model.PHIEUDATPHG.update(
+            { XACNHAN: 0 },
+            {
+                where: { 
+                    MA_DP
+                }
+            }
+        );
+        res.status(200).send("Bạn đã từ chối hủy đặt phòng");
+    } catch (error) {
+        console.log(error);
+        res.status(500).send("Lỗi khi lấy dữ liệu");
+    }
+};
+
+const accessHoanTien = async (req, res) => {
+    try {
+        const token = req.headers.token;
+        if (!token) {
+            return res.status(401).send("Người dùng không được xác thực");
+        }
+
+        const decodedToken = jwt.verify(token, 'MINHNGHIA');
+        if (decodedToken.data.CHUCVU !== "Admin") {
+            return res.status(403).send("Không có quyền truy cập chức năng này");
+        }
+
+        const { MA_DP } = req.params;
+        if (!MA_DP) {
+            return res.status(400).send("Mã đặt phòng không hợp lệ");
+        }
+
+        await model.PHIEUDATPHG.update(
+            { XACNHAN: 1 },
+            {
+                where: { 
+                    MA_DP
+                }
+            }
+        );
+        res.status(200).send("Bạn đã xác nhận hủy đặt phòng");
+    } catch (error) {
+        console.log(error);
+        res.status(500).send("Lỗi khi lấy dữ liệu");
+    }
+};
 
 const generateSignature = (data, checksumKey) => {
     const sortedData = sortObjDataByKey(data);
@@ -955,4 +1021,4 @@ const selectBooking = async (req, res) =>{
     }
 }
 
-export { getCountBookingMonth, bookingRoomPay, verifyWebhook, bookingRoom, getBookingUser, cancelBookingUser, getBookingAll, createBookingFormPartner, getBookingFormPartner, updateBookingFormPartner, deleteBookingFormPartner, selectBooking, getCountMoneyMonth };
+export { getCountBookingMonth, bookingRoomPay, verifyWebhook, bookingRoom, getBookingUser, cancelBookingUser, getBookingAll, createBookingFormPartner, getBookingFormPartner, updateBookingFormPartner, deleteBookingFormPartner, selectBooking, getCountMoneyMonth, denyHoanTien, accessHoanTien };

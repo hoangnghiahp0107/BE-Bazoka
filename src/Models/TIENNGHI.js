@@ -21,6 +21,10 @@ export default class TIENNGHI extends Model {
         model: 'KHACHSAN',
         key: 'MA_KS'
       }
+    },
+    ICON: {
+      type: DataTypes.STRING(255),
+      allowNull: false
     }
   }, {
     sequelize,
