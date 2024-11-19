@@ -42,6 +42,24 @@ const createTienNghi = async (req, res) => {
     }
 };
 
+const deleteTienNghi = async (req, res) =>{
+    try {
+        const { MA_TIENNGHI } = req.params;
+        const data = await model.TIENNGHI.destroy({
+            where: {
+                MA_TIENNGHI: MA_TIENNGHI
+            }
+        });
+        if (!data) {
+            return res.status(404).send("Không tìm thấy tiện nghi");
+        }
+        res.status(200).send("Bạn đã xóa tiện nghi thành công");
+    } catch (error) {
+        console.error(error);
+        res.status(500).send("Lỗi khi lấy dữ liệu tiện nghi");
+    }
+}
+
 const getCountry = async (req, res) => {
     try {
         const data = await model.QUOCGIA.findAll({
@@ -189,4 +207,60 @@ const getAllLocation = async (req, res) => {
     }
 };
 
-export { getCountry, getProvince, getAllLocation, getAllDiaDiem, getTienNghi, createTienNghi }
+const selectTienNghi = async (req, res) =>{
+    try {
+        const { MA_TIENNGHI } = req.params;
+        const data = await model.TIENNGHI.findOne({
+            where:{
+                MA_TIENNGHI: MA_TIENNGHI
+            }
+        })
+        if (!data){
+            return res.status(404).send("Không tìm thấy tiện nghi");
+        }
+        res.status(200).send(data);
+    } catch (error) {
+        console.log(error);
+        res.status(500).send("Lỗi khi lấy dữ liệu")
+    }
+}
+
+const updateTienNghi = async (req, res) => {
+    try {
+        const token = req.headers.token;
+
+        if (!token) {
+            return res.status(401).send("Người dùng không được xác thực");
+        }
+
+        const decodedToken = jwt.verify(token, 'MINHNGHIA');
+        const currentUserRole = decodedToken.data.CHUCVU;
+
+        const partnerIdMatch = /Partner(\d+)/.exec(currentUserRole);
+        const partnerId = partnerIdMatch ? partnerIdMatch[1] : null;
+
+        if (!partnerId) {
+            return res.status(400).send("ID đối tác không hợp lệ");
+        }
+
+        const { MA_TIENNGHI } = req.params
+
+        const { TENTIENNGHI, ICON} = req.body;
+
+        await model.TIENNGHI.update(
+            {
+                TENTIENNGHI,
+                ICON     
+            },
+            {
+                where: { MA_TIENNGHI: MA_TIENNGHI }
+            }
+        );
+        res.status(200).send("Bạn đã cập nhật tiện nghi thành công!");
+    } catch (error) {
+        console.log(error);
+        res.status(500).send("Lỗi khi lấy dữ liệu");
+    }
+};
+
+export { getCountry, getProvince, getAllLocation, getAllDiaDiem, getTienNghi, createTienNghi, deleteTienNghi, selectTienNghi, updateTienNghi }
